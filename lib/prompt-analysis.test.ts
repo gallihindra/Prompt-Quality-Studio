@@ -71,6 +71,27 @@ describe("analyzePrompt", () => {
       expect(getDimension(analysis, "audience").score).toBeGreaterThanOrEqual(10);
       expect(analysis.signals.successCriteria).toBe(true);
     });
+
+    it("recognizes a structured learning roadmap as strong", () => {
+      const analysis = analyzePrompt(`Act as a structured learning coach.
+
+Help me learn machine learning as a beginner. I want to understand how AI works and how machine learning is used in practice.
+
+Create a 4-week roadmap for someone who can study around 5 hours per week. Use a theory-first approach, but include simple practice activities and one small applied project.
+
+The roadmap should include:
+1. weekly milestones
+2. key concepts to learn
+3. practice activities
+4. checkpoints to evaluate progress
+5. completion criteria`);
+
+      expect(analysis.score).toBe(93);
+      expect(analysis.label).toBe("Strong");
+      expect(getDimension(analysis, "context").score).toBeGreaterThanOrEqual(17);
+      expect(getDimension(analysis, "output").score).toBeGreaterThanOrEqual(17);
+      expect(analysis.signals.successCriteria).toBe(true);
+    });
   });
 
   describe("known false positives", () => {

@@ -25,6 +25,9 @@ const hasAny = (text: string, terms: string[]) =>
     new RegExp(`(?:^|\\W)${escapeRegExp(term)}(?:$|\\W)`, "i").test(text),
   );
 
+const hasNumberedList = (text: string) =>
+  /(?:^|\n)\s*\d+[.)]\s+\S/m.test(text);
+
 export function getDimension(
   analysis: Analysis,
   key: Dimension["key"],
@@ -42,16 +45,75 @@ export function analyzePrompt(prompt: string): Analysis {
   const goalSignals = /^(write|create|draft|analyze|summarize|compare|explain|design|develop|generate|review|plan|help|act|give|suggest|recommend|make)\b/i.test(text) ||
     hasAny(text, ["your task", "objective", "goal"]);
   const specificGoalSignals = hasAny(text, ["improve", "prioritize", "rank", "validate"]);
-  const contextSignals = hasAny(text, ["because", "background", "context", "currently", "we are", "our company", "indonesia", "role", "linkedin"]);
+  const learningContextSignals =
+    hasAny(text, ["beginner", "intermediate", "advanced", "learning goal", "study time", "hours per week", "hour per week", "used in practice", "use in practice", "practical use case"]) ||
+    /\b\d+\s*[- ]?(?:day|week|month|year)s?\b/i.test(text);
+  const contextSignals =
+    hasAny(text, ["because", "background", "context", "currently", "we are", "our company", "indonesia", "role", "linkedin"]) ||
+    learningContextSignals;
   const constraintSignals = hasAny(text, ["must", "avoid", "do not", "limit", "within", "under", "maximum", "minimum", "tone", "include", "exclude", "low budget", "short", "minimal inventory", "require"]);
-  const outputSignals = hasAny(text, ["format", "table", "bullet", "section", "json", "outline", "email", "memo", "list", "paragraph", "post", "resume", "presentation", "ideas", "for each", "rank", "steps", "risks", "validation method"]);
+  const outputSignals = hasAny(text, [
+    "format",
+    "roadmap",
+    "plan",
+    "checklist",
+    "table",
+    "bullet",
+    "bullets",
+    "numbered list",
+    "section",
+    "json",
+    "outline",
+    "email",
+    "memo",
+    "list",
+    "paragraph",
+    "post",
+    "resume",
+    "presentation",
+    "ideas",
+    "for each",
+    "rank",
+    "steps",
+    "risks",
+    "validation method",
+    "should include",
+    "include:",
+    "provide:",
+    "output as",
+    "format as",
+  ]);
+  const structuredOutputSignals =
+    hasNumberedList(text) ||
+    hasAny(text, ["bullets", "numbered list", "should include", "include:", "provide:", "output as", "format as", "heading", "columns", "steps"]);
   const audienceSignals = hasAny(text, ["audience", "reader", "readers", "customer", "customers", "executive", "executives", "beginner", "beginners", "expert", "experts", "team", "teams", "stakeholder", "stakeholders", "client", "clients", "leader", "leaders", "manager", "managers", "founder", "founders"]);
-  const successCriteriaSignals = hasAny(text, ["success criteria", "success means", "prioritize", "rank", "validation method", "evaluate", "evaluation", "revenue within"]);
+  const successCriteriaSignals = hasAny(text, [
+    "milestone",
+    "milestones",
+    "checkpoint",
+    "checkpoints",
+    "completion criteria",
+    "validation method",
+    "evaluation criteria",
+    "success criteria",
+    "acceptance criteria",
+    "success means",
+    "prioritize",
+    "rank",
+    "evaluate",
+    "evaluation",
+    "revenue within",
+  ]);
 
   const goal = Math.min(25, (goalSignals ? 15 : 5) + (words.length >= 8 || specificGoalSignals ? 5 : 0) + (text.includes("?") || sentences.length > 1 ? 5 : 0));
   const context = Math.min(20, (contextSignals ? 12 : 3) + (words.length >= 25 ? 5 : 0) + (words.length >= 60 ? 3 : 0));
   const constraints = Math.min(20, (constraintSignals ? 12 : 2) + (/\d/.test(text) ? 4 : 0) + (hasAny(text, ["tone", "style", "length"]) ? 4 : 0));
-  const output = Math.min(20, (outputSignals ? 14 : 3) + (hasAny(text, ["heading", "columns", "steps"]) ? 3 : 0) + (/\d/.test(text) ? 3 : 0));
+  const output = Math.min(
+    20,
+    (outputSignals ? 14 : 3) +
+      (structuredOutputSignals ? 3 : 0) +
+      (/\d/.test(text) && !structuredOutputSignals ? 3 : 0),
+  );
   const audience = Math.min(15, (audienceSignals ? 11 : 2) + (hasAny(text, ["knowledge", "needs", "decision", "understand"]) ? 4 : 0));
 
   const dimensions: Dimension[] = [
