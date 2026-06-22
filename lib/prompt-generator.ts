@@ -162,6 +162,200 @@ const formatCareerRole = (seniority: string, targetRole: string) => {
 const indefiniteArticle = (phrase: string) =>
   /^(?:[aeiou]|honest|hour|MBA|AI\b)/i.test(phrase) ? "an" : "a";
 
+type LearningLanguage = "en" | "id";
+
+const indonesianLearningSignals = [
+  "ajari",
+  "ajarkan",
+  "aku",
+  "saya",
+  "belajar",
+  "mempelajari",
+  "ingin",
+  "pemula",
+  "minggu",
+  "jam",
+  "per minggu",
+  "buatkan",
+  "bantu",
+  "bagaimana",
+];
+
+const isIndonesianLearningInput = (
+  prompt: string,
+  fields: PromptFieldValues,
+) => {
+  const source = [
+    prompt,
+    value(fields, "topic"),
+    value(fields, "goal"),
+    value(fields, "timeline"),
+    value(fields, "timePerWeek"),
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  const hasStrongIndonesianVerb =
+    /\b(ajari|ajarkan|buatkan|mempelajari)\b/i.test(source);
+  const signalCount = indonesianLearningSignals.filter((signal) =>
+    new RegExp(`(?:^|\\W)${signal}(?:$|\\W)`, "i").test(source),
+  ).length;
+
+  return hasStrongIndonesianVerb || signalCount >= 2;
+};
+
+const formatLearningLevel = (
+  level: string,
+  language: LearningLanguage,
+) => {
+  if (language === "en") return level;
+
+  return (
+    {
+      beginner: "pemula",
+      intermediate: "menengah",
+      advanced: "lanjutan",
+    }[level] ?? level
+  );
+};
+
+const formatLearningTimeline = (
+  timeline: string,
+  language: LearningLanguage,
+) => {
+  const trimmed = timeline.trim();
+  const durationMatch = trimmed.match(
+    /^(\d+(?:[.,]\d+)?)\s*(day|days|hari|week|weeks|minggu|month|months|bulan)?$/i,
+  );
+  if (!durationMatch) return trimmed;
+
+  const [, amount, unit = "week"] = durationMatch;
+  const normalizedUnit = unit.toLowerCase();
+  const unitType =
+    ["day", "days", "hari"].includes(normalizedUnit)
+      ? "day"
+      : ["month", "months", "bulan"].includes(normalizedUnit)
+        ? "month"
+        : "week";
+
+  if (language === "id") {
+    return `${amount} ${{ day: "hari", week: "minggu", month: "bulan" }[unitType]}`;
+  }
+
+  const englishUnit = { day: "day", week: "week", month: "month" }[unitType];
+  return `${amount} ${englishUnit}${amount === "1" ? "" : "s"}`;
+};
+
+export function formatLearningWeeklyTime(
+  weeklyTime: string,
+  language: LearningLanguage,
+): string {
+  const trimmed = weeklyTime.trim();
+  const timeMatch = trimmed.match(
+    /^(\d+(?:[.,]\d+)?)\s*(?:hours?|hrs?|jam)?(?:\s*(?:per|\/)\s*(?:week|minggu))?$/i,
+  );
+  if (!timeMatch) return trimmed;
+  const amount = timeMatch[1];
+  return language === "id"
+    ? `${amount} jam per minggu`
+    : `${amount} hour${amount === "1" ? "" : "s"} per week`;
+}
+
+const learningStylePhrase = (
+  style: string,
+  language: LearningLanguage,
+) => {
+  if (language === "en") {
+    return (
+      {
+        practical: "a practical approach",
+        "theory-first": "a theory-first approach",
+        "project-based": "a project-based approach",
+        "structured course": "a structured-course approach",
+      }[style] ?? style
+    );
+  }
+
+  return (
+    {
+      practical: "pendekatan praktis",
+      "theory-first": "pendekatan theory-first",
+      "project-based": "pendekatan berbasis proyek",
+      "structured course": "pendekatan kursus yang terstruktur",
+    }[style] ?? style
+  );
+};
+
+const isSimpleLearningRequest = (prompt: string) => {
+  const cleaned = prompt
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[.?!]+$/, "");
+
+  return (
+    cleaned.split(/\s+/).length <= 8 &&
+    /\b(learn|teach|study|ajari|ajarkan|belajar|mempelajari)\b/i.test(cleaned)
+  );
+};
+
+export function normalizeLearningRequest(
+  prompt: string,
+  topic: string,
+  level: string,
+  language: LearningLanguage,
+): string {
+  const formattedLevel = formatLearningLevel(level, language);
+
+  if (language === "id") {
+    const baseRequest = `Bantu saya mempelajari ${topic} dari level ${formattedLevel}.`;
+    return isSimpleLearningRequest(prompt)
+      ? baseRequest
+      : `${baseRequest} Pertahankan kebutuhan khusus dari permintaan awal berikut: ${prompt.trim()}`;
+  }
+
+  const baseRequest = `Help me learn ${topic} from a ${formattedLevel} level.`;
+  return isSimpleLearningRequest(prompt)
+    ? baseRequest
+    : `${baseRequest} Preserve the specific intent in this original request: ${prompt.trim()}`;
+}
+
+const learningOutputInstructions = (
+  outputFormat: string,
+  language: LearningLanguage,
+) => {
+  if (language === "id") {
+    const opening =
+      outputFormat === "checklist"
+        ? "Susun hasilnya sebagai checklist belajar yang jelas."
+        : outputFormat === "weekly plan"
+          ? "Susun hasilnya sebagai rencana belajar mingguan."
+          : "Susun hasilnya sebagai roadmap belajar.";
+
+    return `${opening} Hasilnya harus mencakup:
+1. target mingguan
+2. konsep utama yang perlu dipelajari
+3. aktivitas latihan
+4. checkpoint untuk mengevaluasi progres
+5. satu proyek kecil yang aplikatif
+6. kriteria selesai`;
+  }
+
+  const opening =
+    outputFormat === "checklist"
+      ? "Structure the result as a clear learning checklist."
+      : outputFormat === "weekly plan"
+        ? "Structure the result as a week-by-week learning plan."
+        : "Structure the result as a learning roadmap.";
+
+  return `${opening} It should include:
+1. weekly targets
+2. key concepts to learn
+3. practice activities
+4. checkpoints for evaluating progress
+5. one small applied project
+6. completion criteria`;
+};
+
 export function generatePrompt(
   type: PromptType,
   prompt: string,
@@ -255,25 +449,55 @@ OUTPUT
 Create the requested product planning document with clear headings, priorities, risks, dependencies, and open questions.`;
 
     case "learning_plan":
-      return `ROLE
-Act as a structured learning coach.
+      {
+        const language: LearningLanguage = isIndonesianLearningInput(
+          prompt,
+          fields,
+        )
+          ? "id"
+          : "en";
+        const topic = value(fields, "topic");
+        const level = value(fields, "currentLevel");
+        const learningGoal = value(fields, "goal");
+        const timeline = formatLearningTimeline(
+          value(fields, "timeline"),
+          language,
+        );
+        const weeklyTime = formatLearningWeeklyTime(
+          value(fields, "timePerWeek"),
+          language,
+        );
+        const style = value(fields, "learningStyle");
+        const outputFormat = value(fields, "outputFormat");
+        const request = normalizeLearningRequest(
+          prompt,
+          topic,
+          level,
+          language,
+        );
 
-LEARNING REQUEST
-${task(prompt)}
+        if (language === "id") {
+          return `Bertindak sebagai coach pembelajaran yang terstruktur.
 
-LEARNER PROFILE
-- Topic: ${value(fields, "topic")}
-- Current level: ${value(fields, "currentLevel")}
-- Target capability: ${value(fields, "goal")}
-- Timeline: ${value(fields, "timeline")}
-- Weekly time: ${value(fields, "timePerWeek")}${optionalLine(fields, "learningStyle", "Learning style")}
-- Plan format: ${value(fields, "outputFormat")}
+${request} Tujuan belajar yang perlu dicapai: ${learningGoal}.
 
-PLAN REQUIREMENTS
-Create a realistic progression from the current level to the target capability. Prioritize practice, feedback, and evidence of progress. Keep the workload within the stated weekly time and include checkpoints for adjusting the plan.
+Buat rencana belajar selama ${timeline} untuk seseorang yang dapat belajar sekitar ${weeklyTime}.${style ? ` Gunakan ${learningStylePhrase(style, language)}, tetapi tetap seimbangkan pemahaman konsep dengan latihan sederhana dan penerapan nyata.` : " Seimbangkan pemahaman konsep dengan latihan sederhana dan penerapan nyata."}
 
-OUTPUT
-Provide the plan as a ${value(fields, "outputFormat")}. Include milestones, practice activities, a small applied project, and completion criteria.`;
+${learningOutputInstructions(outputFormat, language)}
+
+Jaga beban belajar tetap realistis sesuai waktu yang tersedia. Jangan menambahkan tujuan lanjutan yang tidak saya minta. Jelaskan setiap langkah dengan bahasa yang mudah diikuti dan tunjukkan bagaimana progres dapat diperiksa sepanjang rencana.`;
+        }
+
+        return `Act as a structured learning coach.
+
+${request} The learning goal to preserve is: ${learningGoal}.
+
+Create a learning plan covering ${timeline} for someone who can study around ${weeklyTime}.${style ? ` Use ${learningStylePhrase(style, language)}, while still balancing conceptual understanding with simple practice and real application.` : " Balance conceptual understanding with simple practice and real application."}
+
+${learningOutputInstructions(outputFormat, language)}
+
+Keep the workload realistic for the available time. Do not add advanced goals that I did not request. Make each step easy to follow and show how progress can be checked throughout the plan.`;
+      }
 
     case "general":
       return `TASK

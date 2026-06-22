@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   generatePrompt,
   getCareerDeliverableWarning,
+  formatLearningWeeklyTime,
+  normalizeLearningRequest,
   normalizeCareerTask,
 } from "./prompt-generator";
 
@@ -95,5 +97,88 @@ describe("Career/Resume prompt generation", () => {
     expect(
       getCareerDeliverableWarning("Please improve my CV", "resume bullet"),
     ).toBeNull();
+  });
+});
+
+describe("Learning Plan prompt generation", () => {
+  const learningFields = {
+    topic: "machine learning",
+    currentLevel: "beginner",
+    goal: "memahami bagaimana AI bekerja dan bagaimana machine learning digunakan dalam praktik",
+    timeline: "4",
+    timePerWeek: "5",
+    learningStyle: "theory-first",
+    outputFormat: "roadmap",
+  };
+
+  it("normalizes simple Indonesian learning requests", () => {
+    expect(
+      normalizeLearningRequest(
+        "ajari aku machine learning",
+        "machine learning",
+        "beginner",
+        "id",
+      ),
+    ).toBe("Bantu saya mempelajari machine learning dari level pemula.");
+  });
+
+  it("formats bare weekly time values naturally", () => {
+    expect(formatLearningWeeklyTime("5", "en")).toBe("5 hours per week");
+    expect(formatLearningWeeklyTime("5", "id")).toBe("5 jam per minggu");
+    expect(formatLearningWeeklyTime("5 hours per week", "en")).toBe(
+      "5 hours per week",
+    );
+    expect(formatLearningWeeklyTime("5 hours per week", "id")).toBe(
+      "5 jam per minggu",
+    );
+  });
+
+  it("generates a natural Indonesian learning prompt", () => {
+    const output = generatePrompt(
+      "learning_plan",
+      "ajari aku machine learning",
+      learningFields,
+    );
+
+    expect(output).toContain(
+      "Bantu saya mempelajari machine learning dari level pemula.",
+    );
+    expect(output).toContain("selama 4 minggu");
+    expect(output).toContain("sekitar 5 jam per minggu");
+    expect(output).toContain("Gunakan pendekatan theory-first");
+    expect(output).toContain("1. target mingguan");
+    expect(output).toContain("6. kriteria selesai");
+    expect(output).not.toContain("LEARNING REQUEST");
+    expect(output).not.toContain("Weekly time: 5");
+    expect(output).not.toContain("ajari aku machine learning");
+  });
+
+  it("keeps English learning requests in English", () => {
+    const output = generatePrompt(
+      "learning_plan",
+      "help me learn machine learning",
+      {
+        ...learningFields,
+        goal: "understand how machine learning is used in practice",
+      },
+    );
+
+    expect(output).toContain(
+      "Help me learn machine learning from a beginner level.",
+    );
+    expect(output).toContain("Create a learning plan covering 4 weeks");
+    expect(output).toContain("around 5 hours per week");
+    expect(output).not.toContain("Bantu saya");
+  });
+
+  it("recognizes a direct Indonesian teaching request without a pronoun", () => {
+    const output = generatePrompt(
+      "learning_plan",
+      "ajari machine learning",
+      learningFields,
+    );
+
+    expect(output).toContain("Bantu saya mempelajari machine learning");
+    expect(output).not.toContain("Help me learn");
   });
 });
