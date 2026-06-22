@@ -27,6 +27,7 @@ The current MVP supports six prompt types:
 - Prompt-type-specific clarification forms
 - Required-field validation with clear missing-field feedback
 - Type-specific structured prompt templates
+- Rule-based “What Changed” explanations for generated prompts
 - Copy-to-clipboard feedback and fallback behavior
 - Before-and-after prompt examples
 - Transparent scoring methodology

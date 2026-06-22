@@ -6,10 +6,10 @@ const beforePrompt = "Write a launch email for our new product.";
 const afterPrompt = "Draft a launch email announcing our new team analytics dashboard. Existing customers who manage teams of 20–100 people. Lead with the customer benefit, include three features, keep the tone confident, and stay under 180 words. Subject line, preview text, body, and one CTA.";
 
 const steps = [
-  { number: "01", title: "Score", text: "Get an immediate quality score across five practical dimensions." },
-  { number: "02", title: "Diagnose", text: "See exactly where your prompt is strong—and where it is underspecified." },
-  { number: "03", title: "Clarify", text: "Add the missing audience, context, constraints, and output details." },
-  { number: "04", title: "Rewrite", text: "Generate a structured instruction ready to use in any AI tool." },
+  { number: "01", title: "Score", text: "Evaluate the goal, context, constraints, output format, and audience." },
+  { number: "02", title: "Diagnose", text: "See why the instruction is weak and which information is missing." },
+  { number: "03", title: "Clarify", text: "Answer prompt-type-specific questions to fill the important gaps." },
+  { number: "04", title: "Generate", text: "Build a structured prompt with deterministic, rule-based templates." },
 ];
 
 export default function Home() {
@@ -20,11 +20,11 @@ export default function Home() {
           <div className="max-w-2xl">
             <p className="eyebrow mb-6">Prompt quality, made operational</p>
             <h1 className="text-5xl font-semibold leading-[1.04] tracking-[-0.055em] sm:text-6xl lg:text-[72px]">
-              Better instructions.
-              <span className="block text-leaf-600">Better AI output.</span>
+              Clearer instructions.
+              <span className="block text-leaf-600">More useful AI output.</span>
             </h1>
             <p className="mt-7 max-w-xl text-lg leading-8 text-ink/65">
-              Turn vague prompts into structured AI instructions with a practical, rule-based quality workflow.
+              Most weak AI outputs start with an underspecified instruction. Score your prompt, diagnose what is missing, answer focused clarification questions, and generate a more structured version.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link href="/studio" className="btn-primary">
@@ -35,7 +35,7 @@ export default function Home() {
               </Link>
             </div>
             <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-sm text-ink/55">
-              {["No sign-up", "Runs locally", "No prompt data stored"].map((item) => (
+              {["Rule-based", "Runs in your browser", "No external AI API"].map((item) => (
                 <span key={item} className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-leaf-600" /> {item}
                 </span>
@@ -92,16 +92,16 @@ export default function Home() {
         <div className="grid gap-12 lg:grid-cols-[.8fr_1.2fr]">
           <div>
             <p className="eyebrow">The quality gap</p>
-            <h2 className="mt-4 max-w-md text-4xl font-semibold leading-tight tracking-[-0.04em]">Vague prompts create vague outputs.</h2>
+            <h2 className="mt-4 max-w-md text-4xl font-semibold leading-tight tracking-[-0.04em]">Most output problems begin before generation.</h2>
           </div>
           <div className="grid gap-8 sm:grid-cols-2">
             <div className="border-l-2 border-amber pl-6">
-              <p className="text-sm font-semibold text-ink/45">Without structure</p>
-              <p className="mt-3 text-lg leading-8">AI has to guess your goal, audience, context, constraints, and preferred format.</p>
+              <p className="text-sm font-semibold text-ink/45">Unclear instruction</p>
+              <p className="mt-3 text-lg leading-8">When the goal, audience, context, constraints, and format stay implicit, the model has to guess what “good” means.</p>
             </div>
             <div className="border-l-2 border-leaf-500 pl-6">
-              <p className="text-sm font-semibold text-ink/45">With structure</p>
-              <p className="mt-3 text-lg leading-8">AI can focus on producing a relevant, usable answer instead of resolving ambiguity.</p>
+              <p className="text-sm font-semibold text-ink/45">Structured instruction</p>
+              <p className="mt-3 text-lg leading-8">The request becomes a clearer operating brief with explicit context, boundaries, format, and quality criteria.</p>
             </div>
           </div>
         </div>
@@ -158,7 +158,7 @@ export default function Home() {
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">Ready when you are</p>
               <h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-[-0.04em]">Make your next prompt more precise.</h2>
-              <p className="mt-4 text-white/65">No account. No API. Just a clearer way to think.</p>
+              <p className="mt-4 max-w-2xl text-white/65">Rule-based and local-first: your prompt is processed in the browser and is not sent to an external AI API.</p>
             </div>
             <Link href="/studio" className="inline-flex w-fit items-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-leaf-900 transition hover:bg-leaf-50">
               Open the Studio <ArrowRight className="h-4 w-4" />

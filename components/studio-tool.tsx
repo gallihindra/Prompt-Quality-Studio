@@ -10,6 +10,7 @@ import {
   type PromptFieldValues,
   type PromptType,
 } from "@/lib/prompt-forms";
+import { getPromptChanges } from "@/lib/prompt-changes";
 import {
   generatePrompt,
   getCareerDeliverableWarning,
@@ -38,6 +39,10 @@ export function StudioTool() {
         ? getCareerDeliverableWarning(prompt, fields.goal ?? "")
         : null,
     [fields.goal, prompt, promptType],
+  );
+  const promptChanges = useMemo(
+    () => (rewritten ? getPromptChanges(promptType, analysis, fields) : []),
+    [analysis, fields, promptType, rewritten],
   );
 
   function changePromptType(type: PromptType) {
@@ -302,16 +307,41 @@ export function StudioTool() {
             </div>
 
             {rewritten && (
-              <div className="border-t border-line bg-leaf-900 p-6 text-white sm:p-8">
-                <div className="mb-5 flex items-center justify-between gap-4">
-                  <div><p className="text-xs font-semibold uppercase tracking-wider text-white/50">Structured prompt</p><h2 className="mt-1 text-xl font-semibold">Ready to use</h2></div>
-                  <button onClick={copyOutput} aria-live="polite" className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold transition hover:bg-white/15">
-                    {copyStatus === "copied" ? <Check className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />}
-                    {copyStatus === "copied" ? "Copied" : copyStatus === "error" ? "Copy failed" : "Copy prompt"}
-                  </button>
+              <>
+                <div className="border-t border-line bg-leaf-900 p-6 text-white sm:p-8">
+                  <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div><p className="text-xs font-semibold uppercase tracking-wider text-white/50">Structured prompt</p><h2 className="mt-1 text-xl font-semibold">Ready to use</h2></div>
+                    <button onClick={copyOutput} aria-live="polite" className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold transition hover:bg-white/15 sm:w-auto">
+                      {copyStatus === "copied" ? <Check className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />}
+                      {copyStatus === "copied" ? "Copied" : copyStatus === "error" ? "Copy failed" : "Copy prompt"}
+                    </button>
+                  </div>
+                  <pre className="whitespace-pre-wrap break-words rounded-xl border border-white/10 bg-black/10 p-5 font-sans text-sm leading-7 text-white/85">{rewritten}</pre>
                 </div>
-                <pre className="whitespace-pre-wrap rounded-xl border border-white/10 bg-black/10 p-5 font-sans text-sm leading-7 text-white/85">{rewritten}</pre>
-              </div>
+
+                <section className="border-t border-line bg-white p-6 sm:p-8" aria-labelledby="what-changed-heading">
+                  <div className="max-w-2xl">
+                    <p className="eyebrow">Structure added</p>
+                    <h2 id="what-changed-heading" className="mt-2 text-2xl font-semibold tracking-[-0.03em]">What changed</h2>
+                    <p className="mt-2 text-sm leading-6 text-ink/50">
+                      The generated instruction fills gaps and makes the request more specific. It does not guarantee a particular model response.
+                    </p>
+                  </div>
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    {promptChanges.map((change) => (
+                      <div key={change.title} className="flex gap-3 rounded-xl border border-line bg-[#FAFBF8] p-4">
+                        <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-leaf-100 text-leaf-700">
+                          <Check className="h-3.5 w-3.5" />
+                        </span>
+                        <div>
+                          <h3 className="text-sm font-semibold">{change.title}</h3>
+                          <p className="mt-1 text-xs leading-5 text-ink/50">{change.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </>
             )}
           </div>
         )}

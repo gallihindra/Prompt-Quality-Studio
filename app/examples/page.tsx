@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "@/components/icons";
-import { analyzePrompt } from "@/lib/prompt-analysis";
 
 export const metadata: Metadata = {
   title: "Examples",
@@ -10,22 +9,52 @@ export const metadata: Metadata = {
 
 const examples = [
   {
-    category: "Marketing",
-    before: "Write a LinkedIn post about our new report.",
-    after: "Write a 150-word LinkedIn post for HR leaders announcing our 2026 workplace trends report. Open with one surprising finding, explain why it matters, and end with a direct invitation to download the report. Use a confident, evidence-led tone. Avoid hype and emojis.",
-    improvements: ["Clear audience", "Defined length", "Tone and exclusions", "Specific structure"],
+    category: "Business idea",
+    before: "kasih ide bisnis",
+    missing: [
+      "Starting budget and target market",
+      "Business model and available time",
+      "Risk tolerance and validation method",
+    ],
+    after:
+      "Act as a practical business advisor. Recommend five online business ideas for a first-time founder in Indonesia with starting capital under Rp5 million, part-time availability, and low risk. Rank them by speed to first revenue. For each idea, include the target customer, estimated startup cost, first validation step, and key risk.",
+    improvements: [
+      "Added market and budget context",
+      "Defined operating constraints",
+      "Added ranking and validation criteria",
+    ],
   },
   {
-    category: "Analysis",
-    before: "Analyze this customer feedback.",
-    after: "Analyze the customer feedback below for a product manager preparing the Q3 roadmap. Group comments into 5–7 themes, estimate each theme’s frequency, include two representative quotes, and distinguish urgent defects from feature requests. Return a table followed by three prioritized recommendations.",
-    improvements: ["Decision context", "Taxonomy", "Evidence requirement", "Usable output"],
+    category: "Career / resume",
+    before: "please improve my resume",
+    missing: [
+      "Target role and seniority",
+      "The resume section or deliverable",
+      "Tone and factuality boundaries",
+    ],
+    after:
+      "Act as an experienced career editor. Review and strengthen my resume content for a mid-level AI Operations role. Rewrite the supplied experience as concise, confident bullets that emphasize scope, actions, and outcomes already present. Do not invent employers, metrics, qualifications, or achievements. Return the revised bullets first, then identify any missing evidence I should add.",
+    improvements: [
+      "Added role and seniority context",
+      "Specified the resume deliverable",
+      "Added factuality guardrails",
+    ],
   },
   {
-    category: "Operations",
-    before: "Make an onboarding plan.",
-    after: "Create a 30-day onboarding plan for a newly hired customer success manager at a B2B SaaS company. Organize it by week with goals, core activities, owner, and evidence of completion. Include product training, call shadowing, account review, and a final readiness check. Format as a concise table.",
-    improvements: ["Role and setting", "Time horizon", "Required content", "Completion criteria"],
+    category: "Learning plan",
+    before: "ajari aku machine learning",
+    missing: [
+      "Current level and learning goal",
+      "Timeline and weekly study time",
+      "Milestones and completion criteria",
+    ],
+    after:
+      "Bertindak sebagai coach pembelajaran yang terstruktur. Bantu saya mempelajari machine learning dari level pemula agar memahami cara kerjanya dalam praktik. Buat roadmap belajar 4 minggu untuk sekitar 5 jam per minggu dengan pendekatan theory-first, latihan sederhana, dan satu proyek kecil. Sertakan target mingguan, konsep utama, aktivitas latihan, checkpoint progres, dan kriteria selesai.",
+    improvements: [
+      "Added level, goal, and schedule",
+      "Defined the learning approach",
+      "Added checkpoints and completion criteria",
+    ],
   },
 ];
 
@@ -34,33 +63,71 @@ export default function ExamplesPage() {
     <div className="container-page py-16 sm:py-20">
       <div className="max-w-3xl">
         <p className="eyebrow">Prompt patterns</p>
-        <h1 className="mt-4 text-5xl font-semibold tracking-[-0.05em] sm:text-6xl">Clearer inputs, more useful outputs.</h1>
-        <p className="mt-6 max-w-2xl text-lg leading-8 text-ink/60">See how practical details transform a loose request into an instruction an AI system can reliably follow.</p>
+        <h1 className="mt-4 text-5xl font-semibold tracking-[-0.05em] sm:text-6xl">
+          Clearer inputs, more useful outputs.
+        </h1>
+        <p className="mt-6 max-w-2xl text-lg leading-8 text-ink/60">
+          See how focused clarification turns a short request into a more
+          specific, usable instruction—without calling an external AI model.
+        </p>
       </div>
 
       <div className="mt-16 space-y-8">
         {examples.map((example, index) => (
           <article key={example.category} className="panel overflow-hidden">
-            <div className="flex items-center justify-between border-b border-line px-6 py-4 sm:px-8">
+            <div className="flex flex-col gap-3 border-b border-line px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
               <div className="flex items-center gap-3">
-                <span className="text-xs font-semibold text-leaf-600">0{index + 1}</span>
+                <span className="text-xs font-semibold text-leaf-600">
+                  0{index + 1}
+                </span>
                 <h2 className="font-semibold">{example.category}</h2>
               </div>
-              <span className="rounded-full bg-leaf-100 px-3 py-1 text-xs font-semibold text-leaf-700">
-                Score {analyzePrompt(example.before).score} → {analyzePrompt(example.after).score}
+              <span className="w-fit rounded-full bg-leaf-100 px-3 py-1 text-xs font-semibold text-leaf-700">
+                Weak → structured
               </span>
             </div>
             <div className="grid lg:grid-cols-2">
               <div className="p-6 sm:p-8">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#9A6E29]">Before</p>
-                <p className="mt-5 text-xl leading-8 tracking-[-0.015em]">“{example.before}”</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#9A6E29]">
+                  Original weak prompt
+                </p>
+                <p className="mt-5 text-xl leading-8 tracking-[-0.015em]">
+                  “{example.before}”
+                </p>
+                <div className="mt-8 border-t border-line pt-6">
+                  <p className="text-sm font-semibold">What is missing</p>
+                  <ul className="mt-3 space-y-2">
+                    {example.missing.map((item) => (
+                      <li
+                        key={item}
+                        className="flex gap-2 text-sm leading-6 text-ink/55"
+                      >
+                        <span
+                          className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber"
+                          aria-hidden="true"
+                        />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
               <div className="border-t border-line bg-[#F8FAF6] p-6 sm:p-8 lg:border-l lg:border-t-0">
-                <p className="text-xs font-semibold uppercase tracking-wider text-leaf-600">After</p>
-                <p className="mt-5 text-sm leading-7 text-ink/80">{example.after}</p>
-                <div className="mt-6 flex flex-wrap gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wider text-leaf-600">
+                  Improved prompt excerpt
+                </p>
+                <p className="mt-5 text-sm leading-7 text-ink/80">
+                  {example.after}
+                </p>
+                <p className="mt-7 text-sm font-semibold">What changed</p>
+                <div className="mt-3 flex flex-wrap gap-2">
                   {example.improvements.map((item) => (
-                    <span key={item} className="rounded-full border border-line bg-white px-3 py-1.5 text-xs text-ink/60">{item}</span>
+                    <span
+                      key={item}
+                      className="rounded-full border border-line bg-white px-3 py-1.5 text-xs text-ink/60"
+                    >
+                      {item}
+                    </span>
                   ))}
                 </div>
               </div>
@@ -70,8 +137,18 @@ export default function ExamplesPage() {
       </div>
 
       <div className="mt-12 flex flex-col items-start justify-between gap-6 rounded-2xl bg-leaf-900 p-8 text-white sm:flex-row sm:items-center">
-        <div><h2 className="text-2xl font-semibold">Have a prompt of your own?</h2><p className="mt-2 text-sm text-white/60">Score it and build a structured version in the Studio.</p></div>
-        <Link href="/studio" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-leaf-900">Try the Studio <ArrowRight className="h-4 w-4" /></Link>
+        <div>
+          <h2 className="text-2xl font-semibold">Have a prompt of your own?</h2>
+          <p className="mt-2 text-sm text-white/60">
+            Score it and build a structured version in the Studio.
+          </p>
+        </div>
+        <Link
+          href="/studio"
+          className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-leaf-900"
+        >
+          Try the Studio <ArrowRight className="h-4 w-4" />
+        </Link>
       </div>
     </div>
   );
