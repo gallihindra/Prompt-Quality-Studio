@@ -10,7 +10,10 @@ import {
   type PromptFieldValues,
   type PromptType,
 } from "@/lib/prompt-forms";
-import { generatePrompt } from "@/lib/prompt-generator";
+import {
+  generatePrompt,
+  getCareerDeliverableWarning,
+} from "@/lib/prompt-generator";
 import { ArrowRight, Check, CopyIcon, Spark } from "./icons";
 import { ScoreRing } from "./score-ring";
 
@@ -29,6 +32,13 @@ export function StudioTool() {
     [fields, promptType],
   );
   const canGenerate = missingRequiredFields.length === 0;
+  const careerDeliverableWarning = useMemo(
+    () =>
+      promptType === "career_resume"
+        ? getCareerDeliverableWarning(prompt, fields.goal ?? "")
+        : null,
+    [fields.goal, prompt, promptType],
+  );
 
   function changePromptType(type: PromptType) {
     setPromptType(type);
@@ -281,6 +291,14 @@ export function StudioTool() {
                   </p>
                 )}
               </div>
+              {careerDeliverableWarning && (
+                <p
+                  className="mt-3 rounded-lg border border-amber/40 bg-[#F8F2E8] px-3.5 py-2.5 text-xs leading-5 text-[#76551F]"
+                  role="status"
+                >
+                  {careerDeliverableWarning}
+                </p>
+              )}
             </div>
 
             {rewritten && (
