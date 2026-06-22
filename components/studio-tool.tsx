@@ -1,0 +1,303 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { analyzePrompt } from "@/lib/prompt-analysis";
+import {
+  createEmptyFieldValues,
+  getMissingRequiredFields,
+  PROMPT_TYPE_CONFIGS,
+  PROMPT_TYPES,
+  type PromptFieldValues,
+  type PromptType,
+} from "@/lib/prompt-forms";
+import { generatePrompt } from "@/lib/prompt-generator";
+import { ArrowRight, Check, CopyIcon, Spark } from "./icons";
+import { ScoreRing } from "./score-ring";
+
+export function StudioTool() {
+  const [promptType, setPromptType] = useState<PromptType>("general");
+  const [prompt, setPrompt] = useState("");
+  const [hasRun, setHasRun] = useState(false);
+  const [fields, setFields] = useState<PromptFieldValues>(() => createEmptyFieldValues("general"));
+  const [rewritten, setRewritten] = useState("");
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
+
+  const analysis = useMemo(() => analyzePrompt(prompt), [prompt]);
+  const promptConfig = PROMPT_TYPE_CONFIGS[promptType];
+  const missingRequiredFields = useMemo(
+    () => getMissingRequiredFields(promptType, fields),
+    [fields, promptType],
+  );
+  const canGenerate = missingRequiredFields.length === 0;
+
+  function changePromptType(type: PromptType) {
+    setPromptType(type);
+    setFields(createEmptyFieldValues(type));
+    setRewritten("");
+    setCopyStatus("idle");
+  }
+
+  function runAnalysis() {
+    if (!prompt.trim()) return;
+    setHasRun(true);
+    setRewritten("");
+  }
+
+  function createRewrite() {
+    if (!canGenerate) return;
+    setRewritten(generatePrompt(promptType, prompt, fields));
+  }
+
+  function updateField(key: string, value: string) {
+    setFields((currentFields) => ({ ...currentFields, [key]: value }));
+    setRewritten("");
+    setCopyStatus("idle");
+  }
+
+  async function copyOutput() {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(rewritten);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = rewritten;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        const copied = document.execCommand("copy");
+        textarea.remove();
+        if (!copied) throw new Error("Copy command was unavailable.");
+      }
+      setCopyStatus("copied");
+    } catch {
+      setCopyStatus("error");
+    }
+    window.setTimeout(() => setCopyStatus("idle"), 1600);
+  }
+
+  return (
+    <div className="container-page py-12 sm:py-16">
+      <div className="mb-10 max-w-2xl">
+        <p className="eyebrow">Prompt workspace</p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Build a stronger prompt.</h1>
+        <p className="mt-4 text-base leading-7 text-ink/60">Start with what you have. The studio will assess its structure and guide you through the missing details.</p>
+      </div>
+
+      <div className="mb-8 flex items-center gap-2 overflow-x-auto pb-2">
+        {["1  Score", "2  Diagnose", "3  Clarify", "4  Rewrite"].map((step, index) => {
+          const active = index === 0 || hasRun;
+          return (
+            <div key={step} className={`whitespace-pre rounded-full px-4 py-2 text-xs font-semibold ${active ? "bg-leaf-100 text-leaf-700" : "bg-white text-ink/35"}`}>
+              {step}
+            </div>
+          );
+        })}
+      </div>
+
+      <section className="panel overflow-hidden shadow-soft">
+        <div className="border-b border-line p-5 sm:p-7">
+          <div className="mb-6 grid gap-3 sm:grid-cols-[220px_1fr] sm:items-end">
+            <label htmlFor="prompt-type" className="block">
+              <span className="mb-2 block text-sm font-semibold">Prompt type</span>
+              <select
+                id="prompt-type"
+                value={promptType}
+                onChange={(event) => changePromptType(event.target.value as PromptType)}
+                className="h-12 w-full rounded-xl border border-line bg-white px-3.5 text-sm outline-none transition focus:border-leaf-500 focus:ring-2 focus:ring-leaf-100"
+              >
+                {PROMPT_TYPES.map((type) => (
+                  <option key={type} value={type}>{PROMPT_TYPE_CONFIGS[type].label}</option>
+                ))}
+              </select>
+            </label>
+            <p className="text-sm leading-6 text-ink/50">{promptConfig.description}</p>
+          </div>
+          <div className="mb-3 flex items-center justify-between gap-4">
+            <label htmlFor="prompt" className="text-sm font-semibold">Your raw prompt</label>
+            <button
+              onClick={() => {
+                setPrompt(promptConfig.samplePrompt);
+                setHasRun(false);
+                setRewritten("");
+              }}
+              className="text-xs font-semibold text-leaf-700 hover:underline"
+            >
+              Use a {promptConfig.label.toLowerCase()} example
+            </button>
+          </div>
+          <textarea
+            id="prompt"
+            value={prompt}
+            onChange={(event) => {
+              setPrompt(event.target.value);
+              setHasRun(false);
+              setRewritten("");
+            }}
+            placeholder="Paste or write your prompt here..."
+            className="min-h-44 w-full rounded-xl border border-line bg-[#FAFBF8] p-4 text-base leading-7 outline-none transition placeholder:text-ink/30 focus:border-leaf-500 focus:ring-2 focus:ring-leaf-100"
+          />
+          <div className="mt-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+            <p className="text-xs text-ink/40">{prompt.trim().split(/\s+/).filter(Boolean).length} words · analyzed locally</p>
+            <button onClick={runAnalysis} disabled={!prompt.trim()} className="btn-primary disabled:cursor-not-allowed disabled:opacity-40">
+              Assess prompt <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        {!hasRun ? (
+          <div className="grid min-h-64 place-items-center p-8 text-center">
+            <div>
+              <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-leaf-50 text-leaf-600"><Spark className="h-5 w-5" /></span>
+              <h2 className="mt-4 font-semibold">Your assessment will appear here</h2>
+              <p className="mt-2 max-w-sm text-sm leading-6 text-ink/50">We’ll look for a clear goal, context, constraints, output format, and audience.</p>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[220px_1fr]">
+              <div className="flex flex-col items-center justify-center rounded-xl bg-[#FAFBF8] p-6 text-center">
+                <ScoreRing score={analysis.score} />
+                <span className="mt-3 rounded-full bg-leaf-100 px-3 py-1 text-xs font-semibold text-leaf-700">{analysis.label}</span>
+              </div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold">Quality breakdown</h2>
+                  <span className="text-xs text-ink/40">Weighted score</span>
+                </div>
+                <div className="mt-6 space-y-5">
+                  {analysis.dimensions.map((dimension) => {
+                    const percent = Math.round((dimension.score / dimension.max) * 100);
+                    return (
+                      <div key={dimension.key}>
+                        <div className="mb-2 flex items-end justify-between gap-4">
+                          <div><p className="text-sm font-semibold">{dimension.label}</p><p className="mt-0.5 text-xs text-ink/45">{dimension.note}</p></div>
+                          <p className="shrink-0 text-sm font-semibold">{dimension.score}<span className="font-normal text-ink/35">/{dimension.max}</span></p>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-line"><div className="h-full rounded-full bg-leaf-500 transition-all duration-700" style={{ width: `${percent}%` }} /></div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-line bg-[#FAFBF8] p-6 sm:p-8">
+              <div className="grid gap-6 lg:grid-cols-2">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-ink/40">What is working</p>
+                  <div className="mt-3 space-y-2">
+                    {(analysis.strengths.length ? analysis.strengths : ["A starting task is present"]).map((item) => (
+                      <p key={item} className="flex items-center gap-2 text-sm"><span className="grid h-5 w-5 place-items-center rounded-full bg-leaf-100 text-leaf-700"><Check className="h-3 w-3" /></span>{item}</p>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-ink/40">Priority improvements</p>
+                  <div className="mt-3 space-y-2">
+                    {(analysis.gaps.length ? analysis.gaps : ["No major structural gaps detected."]).slice(0, 3).map((item, i) => (
+                      <p key={item} className="flex items-start gap-2 text-sm"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#F3EEE5] text-[10px] font-bold text-[#8A6527]">{i + 1}</span>{item}</p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-line p-6 sm:p-8">
+              <div className="mb-6">
+                <p className="eyebrow">Clarify</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">Add {promptConfig.label.toLowerCase()} details.</h2>
+                <p className="mt-2 text-sm text-ink/50">Complete the required fields to generate a finished instruction. Optional details are included only when provided.</p>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                {promptConfig.fields.map((field) => {
+                  const fieldId = `${promptType}-${field.key}`;
+                  const helperId = `${fieldId}-helper`;
+                  const sharedClasses = "w-full rounded-xl border border-line bg-white px-3.5 text-sm outline-none transition placeholder:text-ink/28 focus:border-leaf-500 focus:ring-2 focus:ring-leaf-100";
+
+                  return (
+                    <label key={field.key} htmlFor={fieldId} className="block">
+                      <span className="mb-1 block text-sm font-semibold">
+                        {field.label}
+                        <span className={field.required ? "ml-1 text-leaf-700" : "ml-1 font-normal text-ink/40"}>
+                          {field.required ? "*" : "(Optional)"}
+                        </span>
+                      </span>
+                      <span id={helperId} className="mb-2 block text-xs leading-5 text-ink/45">{field.helper}</span>
+                      {field.input === "select" ? (
+                        <select
+                          id={fieldId}
+                          aria-describedby={helperId}
+                          aria-required={field.required}
+                          required={field.required}
+                          value={fields[field.key] ?? ""}
+                          onChange={(event) => updateField(field.key, event.target.value)}
+                          className={`h-12 ${sharedClasses}`}
+                        >
+                          <option value="">Select an option</option>
+                          {field.options?.map((option) => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                          ))}
+                        </select>
+                      ) : field.input === "textarea" ? (
+                        <textarea
+                          id={fieldId}
+                          aria-describedby={helperId}
+                          aria-required={field.required}
+                          required={field.required}
+                          value={fields[field.key] ?? ""}
+                          onChange={(event) => updateField(field.key, event.target.value)}
+                          placeholder={field.placeholder}
+                          className={`min-h-28 py-3.5 leading-6 ${sharedClasses}`}
+                        />
+                      ) : (
+                        <input
+                          id={fieldId}
+                          aria-describedby={helperId}
+                          aria-required={field.required}
+                          type="text"
+                          required={field.required}
+                          value={fields[field.key] ?? ""}
+                          onChange={(event) => updateField(field.key, event.target.value)}
+                          placeholder={field.placeholder}
+                          className={`h-12 ${sharedClasses}`}
+                        />
+                      )}
+                    </label>
+                  );
+                })}
+              </div>
+              <div className="mt-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+                <button
+                  onClick={createRewrite}
+                  disabled={!canGenerate}
+                  className="btn-primary disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Generate improved prompt <Spark className="h-4 w-4" />
+                </button>
+                {missingRequiredFields.length > 0 && (
+                  <p className="text-xs leading-5 text-ink/50" aria-live="polite">
+                    Still required: {missingRequiredFields.map((field) => field.label).join(", ")}.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {rewritten && (
+              <div className="border-t border-line bg-leaf-900 p-6 text-white sm:p-8">
+                <div className="mb-5 flex items-center justify-between gap-4">
+                  <div><p className="text-xs font-semibold uppercase tracking-wider text-white/50">Structured prompt</p><h2 className="mt-1 text-xl font-semibold">Ready to use</h2></div>
+                  <button onClick={copyOutput} aria-live="polite" className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold transition hover:bg-white/15">
+                    {copyStatus === "copied" ? <Check className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />}
+                    {copyStatus === "copied" ? "Copied" : copyStatus === "error" ? "Copy failed" : "Copy prompt"}
+                  </button>
+                </div>
+                <pre className="whitespace-pre-wrap rounded-xl border border-white/10 bg-black/10 p-5 font-sans text-sm leading-7 text-white/85">{rewritten}</pre>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
