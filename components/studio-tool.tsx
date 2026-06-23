@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { createCanonicalPrompt } from "@/lib/canonical-prompt";
 import { analyzePrompt } from "@/lib/prompt-analysis";
 import {
   createEmptyFieldValues,
@@ -31,6 +32,10 @@ export function StudioTool() {
   >("idle");
 
   const analysis = useMemo(() => analyzePrompt(prompt), [prompt]);
+  const canonicalPrompt = useMemo(
+    () => createCanonicalPrompt(prompt, promptType),
+    [prompt, promptType],
+  );
   const promptConfig = PROMPT_TYPE_CONFIGS[promptType];
   const missingRequiredFields = useMemo(
     () => getMissingRequiredFields(promptType, fields),
@@ -238,6 +243,124 @@ export function StudioTool() {
                 </div>
               </div>
             </div>
+
+            <section className="border-t border-line bg-white p-6 sm:p-8" aria-labelledby="structured-interpretation-heading">
+              <details className="group rounded-2xl border border-[#DADDF0] bg-[#F7F8FC] p-5 shadow-[0_12px_30px_rgba(49,46,129,0.05)]" open>
+                <summary className="flex cursor-pointer list-none flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="eyebrow">Structured interpretation</p>
+                    <h2 id="structured-interpretation-heading" className="mt-2 text-xl font-semibold tracking-[-0.025em]">
+                      How the tool reads your original prompt
+                    </h2>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-ink/50">
+                      This rule-based view separates what was found, what was inferred, and what still needs confirmation before the prompt is rebuilt.
+                    </p>
+                  </div>
+                  <span className="rounded-full border border-[#C9CDEA] bg-white px-3 py-1.5 text-xs font-semibold text-leaf-700 group-open:hidden">
+                    Show
+                  </span>
+                  <span className="rounded-full border border-[#C9CDEA] bg-white px-3 py-1.5 text-xs font-semibold text-leaf-700 group-open:inline hidden">
+                    Hide
+                  </span>
+                </summary>
+
+                <div className="mt-6 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+                  <div className="rounded-xl border border-line bg-white p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-ink/40">Detected signals</p>
+                    <dl className="mt-4 space-y-3 text-sm">
+                      <div className="flex items-center justify-between gap-4">
+                        <dt className="text-ink/50">Language</dt>
+                        <dd className="font-semibold capitalize">{canonicalPrompt.language}</dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <dt className="text-ink/50">Primary category</dt>
+                        <dd className="font-semibold">{canonicalPrompt.primaryCategoryLabel}</dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <dt className="text-ink/50">Confidence</dt>
+                        <dd className="font-semibold capitalize">{canonicalPrompt.categoryConfidence}</dd>
+                      </div>
+                    </dl>
+                    {canonicalPrompt.possibleCategories.length > 0 && (
+                      <div className="mt-4 border-t border-line pt-4">
+                        <p className="text-xs font-semibold text-ink/45">May also relate to</p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {canonicalPrompt.possibleCategories.map((category) => (
+                            <span key={category.category} className="rounded-full bg-leaf-50 px-2.5 py-1 text-xs font-semibold text-leaf-700">
+                              {category.label}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-xl border border-line bg-white p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-ink/40">Found in prompt</p>
+                      <div className="mt-3 space-y-2">
+                        {canonicalPrompt.extractedFields.filter((field) => field.source === "explicit").length > 0 ? (
+                          canonicalPrompt.extractedFields.filter((field) => field.source === "explicit").map((field) => (
+                            <p key={`${field.label}-${field.value}`} className="text-sm leading-6">
+                              <span className="font-semibold">{field.label}:</span>{" "}
+                              <span className="text-ink/60">{field.value}</span>
+                            </p>
+                          ))
+                        ) : (
+                          <p className="text-sm leading-6 text-ink/50">No strong structured fields detected yet.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-line bg-white p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-ink/40">Inferred from wording</p>
+                      <div className="mt-3 space-y-2">
+                        {canonicalPrompt.extractedFields.filter((field) => field.source === "inferred").length > 0 ? (
+                          canonicalPrompt.extractedFields.filter((field) => field.source === "inferred").map((field) => (
+                            <p key={`${field.label}-${field.value}`} className="text-sm leading-6">
+                              <span className="font-semibold">{field.label}:</span>{" "}
+                              <span className="text-ink/60">{field.value}</span>
+                            </p>
+                          ))
+                        ) : (
+                          <p className="text-sm leading-6 text-ink/50">No extra intent inferred beyond the selected type.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                  <div className="rounded-xl border border-[#F0D8AC] bg-[#FFF8EB] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-[#8A6128]">Still missing from the original prompt</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {canonicalPrompt.missingFields.map((field) => (
+                        <span key={field} className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-[#7A551F] ring-1 ring-[#F0D8AC]">
+                          {field}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-line bg-white p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-ink/40">Confirmation notes</p>
+                    <div className="mt-3 space-y-2 text-sm leading-6 text-ink/60">
+                      {canonicalPrompt.mismatchNote && (
+                        <p className="rounded-lg bg-[#FFF8EB] px-3 py-2 text-[#7A551F]">
+                          {canonicalPrompt.mismatchNote}
+                        </p>
+                      )}
+                      {canonicalPrompt.ambiguityNotes.map((note) => (
+                        <p key={note}>{note}</p>
+                      ))}
+                      {!canonicalPrompt.mismatchNote && canonicalPrompt.ambiguityNotes.length === 0 && (
+                        <p>The selected type looks usable. Confirm the missing details below before generating.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </section>
 
             <div className="border-t border-line p-6 sm:p-8">
               <div className="mb-6">
