@@ -23,7 +23,7 @@ const productFlow = [
 const designDecisions = [
   {
     title: "Local-first, rule-based MVP",
-    text: "The first version proves the workflow without API costs, accounts, stored prompt data, or dependence on an external model.",
+    text: "The product proves the workflow without API costs, accounts, server-side prompt storage, or dependence on an external model.",
   },
   {
     title: "Prompt types over one generic flow",
@@ -68,6 +68,7 @@ const capabilities = [
   "Type-aware clarification",
   "Generated improved prompts",
   "What Changed explanation",
+  "Local Prompt Library",
   "Examples and methodology pages",
   "Privacy-friendly local processing",
   "Regression tests for scoring and generation logic",
@@ -77,14 +78,14 @@ const limitations = [
   "The system is deterministic and rule-based.",
   "It does not evaluate responses produced by AI models.",
   "It cannot guarantee that a rewritten prompt will produce a better output.",
-  "Prompts and user context are not saved.",
+  "Only prompts explicitly saved to the Local Library persist, with no cloud sync or account-based access.",
   "It does not have semantic model understanding.",
   "The MVP focuses on instruction structure, not full AI-output evaluation.",
 ];
 
 const roadmap = [
   "Follow-up Prompt Builder",
-  "Local Prompt Library",
+  "Prompt library organization and search",
   "Local Memory and reusable user context",
   "Rubric Linter / Eval Ops Mode",
   "AI Evaluation Lab and interactive calibration practice",

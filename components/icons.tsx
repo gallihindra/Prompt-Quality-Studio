@@ -42,3 +42,16 @@ export function Spark(props: IconProps) {
     </svg>
   );
 }
+
+export function Bookmark(props: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
+      <path
+        d="M5.5 3.5h9v13l-4.5-3-4.5 3v-13Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

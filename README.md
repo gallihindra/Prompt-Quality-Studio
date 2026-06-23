@@ -28,6 +28,7 @@ The current MVP supports six prompt types:
 - Required-field validation with clear missing-field feedback
 - Type-specific structured prompt templates
 - Rule-based “What Changed” explanations for generated prompts
+- Local Prompt Library for saving, revisiting, copying, and deleting prompts
 - Copy-to-clipboard feedback and fallback behavior
 - Before-and-after prompt examples
 - Transparent scoring methodology
@@ -51,10 +52,12 @@ Prompt Quality Studio runs entirely in the browser and uses rule-based logic onl
 - No database
 - No authentication
 - No payments or analytics
-- No prompt storage
+- No server-side prompt storage
 - No paid dependencies or services required
 
-Prompt text is analyzed locally and is not sent to an external service.
+Prompt text is analyzed locally and is not sent to an external service. Prompts
+are stored only when the user explicitly saves them to the browser-based Local
+Prompt Library. Saved prompts remain in that browser's `localStorage`.
 
 ## Local setup
 
@@ -105,7 +108,8 @@ No environment variables or external services are required.
 - Prompt scoring uses the same five weighted dimensions for every prompt type.
 - Indonesian-language scoring support is limited.
 - Generated prompts use curated rule-based templates and do not rewrite prose using an AI model.
-- User inputs and generated prompts are not persisted between sessions.
+- Only explicitly saved prompts persist between sessions, using browser
+  `localStorage`; there is no cloud sync, account-based access, or server backup.
 - The application does not evaluate the quality of responses produced by other AI tools.
 
 ## Future roadmap

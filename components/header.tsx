@@ -3,6 +3,8 @@ import { ArrowUpRight } from "./icons";
 
 const nav = [
   { href: "/studio", label: "Studio" },
+  { href: "/follow-up", label: "Follow-up" },
+  { href: "/library", label: "Library" },
   { href: "/examples", label: "Examples" },
   { href: "/methodology", label: "Methodology" },
 ];
@@ -17,7 +19,7 @@ export function Header() {
           </span>
           <span className="hidden text-sm font-semibold tracking-[-0.01em] min-[360px]:inline sm:text-base">Prompt Quality Studio</span>
         </Link>
-        <nav className="hidden items-center gap-7 md:flex" aria-label="Main navigation">
+        <nav className="hidden items-center gap-4 lg:gap-6 md:flex" aria-label="Main navigation">
           {nav.map((item) => (
             <Link key={item.href} href={item.href} className="text-sm text-ink/65 transition hover:text-ink">
               {item.label}

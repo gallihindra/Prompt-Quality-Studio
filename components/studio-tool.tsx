@@ -15,7 +15,8 @@ import {
   generatePrompt,
   getCareerDeliverableWarning,
 } from "@/lib/prompt-generator";
-import { ArrowRight, Check, CopyIcon, Spark } from "./icons";
+import { savePrompt } from "@/lib/prompt-library";
+import { ArrowRight, Bookmark, Check, CopyIcon, Spark } from "./icons";
 import { ScoreRing } from "./score-ring";
 
 export function StudioTool() {
@@ -25,6 +26,9 @@ export function StudioTool() {
   const [fields, setFields] = useState<PromptFieldValues>(() => createEmptyFieldValues("general"));
   const [rewritten, setRewritten] = useState("");
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
+  const [saveStatus, setSaveStatus] = useState<
+    "idle" | "saved" | "duplicate" | "unavailable" | "error"
+  >("idle");
 
   const analysis = useMemo(() => analyzePrompt(prompt), [prompt]);
   const promptConfig = PROMPT_TYPE_CONFIGS[promptType];
@@ -50,23 +54,27 @@ export function StudioTool() {
     setFields(createEmptyFieldValues(type));
     setRewritten("");
     setCopyStatus("idle");
+    setSaveStatus("idle");
   }
 
   function runAnalysis() {
     if (!prompt.trim()) return;
     setHasRun(true);
     setRewritten("");
+    setSaveStatus("idle");
   }
 
   function createRewrite() {
     if (!canGenerate) return;
     setRewritten(generatePrompt(promptType, prompt, fields));
+    setSaveStatus("idle");
   }
 
   function updateField(key: string, value: string) {
     setFields((currentFields) => ({ ...currentFields, [key]: value }));
     setRewritten("");
     setCopyStatus("idle");
+    setSaveStatus("idle");
   }
 
   async function copyOutput() {
@@ -89,6 +97,17 @@ export function StudioTool() {
       setCopyStatus("error");
     }
     window.setTimeout(() => setCopyStatus("idle"), 1600);
+  }
+
+  function saveCurrentPrompt() {
+    const result = savePrompt({
+      promptType,
+      originalPrompt: prompt,
+      generatedPrompt: rewritten,
+      score: analysis.score,
+      changes: promptChanges.map((change) => change.title),
+    });
+    setSaveStatus(result.status);
   }
 
   return (
@@ -135,6 +154,7 @@ export function StudioTool() {
                 setPrompt(promptConfig.samplePrompt);
                 setHasRun(false);
                 setRewritten("");
+                setSaveStatus("idle");
               }}
               className="text-xs font-semibold text-leaf-700 hover:underline"
             >
@@ -148,6 +168,7 @@ export function StudioTool() {
               setPrompt(event.target.value);
               setHasRun(false);
               setRewritten("");
+              setSaveStatus("idle");
             }}
             placeholder="Paste or write your prompt here..."
             className="min-h-44 w-full rounded-xl border border-line bg-[#F9FAFD] p-4 text-base leading-7 outline-none transition placeholder:text-ink/30 focus:border-leaf-500 focus:ring-2 focus:ring-leaf-100"
@@ -311,12 +332,47 @@ export function StudioTool() {
                 <div className="border-t border-line bg-[#EEF1FF] p-6 sm:p-8">
                   <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div><p className="text-xs font-semibold uppercase tracking-wider text-leaf-700/70">Structured prompt</p><h2 className="mt-1 text-xl font-semibold text-ink">Ready to use</h2></div>
-                    <button onClick={copyOutput} aria-live="polite" className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full px-4 py-2 text-xs font-semibold text-white transition focus:outline-none focus:ring-2 focus:ring-offset-2 sm:w-auto ${copyStatus === "copied" ? "bg-success-600 hover:bg-success-700 focus:ring-success-600" : "bg-leaf-600 hover:bg-leaf-700 focus:ring-leaf-500"}`}>
-                      {copyStatus === "copied" ? <Check className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />}
-                      {copyStatus === "copied" ? "Copied" : copyStatus === "error" ? "Copy failed" : "Copy prompt"}
-                    </button>
+                    <div className="grid w-full gap-2 sm:flex sm:w-auto">
+                      <button
+                        onClick={saveCurrentPrompt}
+                        disabled={saveStatus === "saved" || saveStatus === "duplicate"}
+                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#C9CDEA] bg-white px-4 py-2 text-xs font-semibold text-leaf-700 transition hover:border-leaf-500 disabled:cursor-default disabled:border-success-100 disabled:bg-success-50 disabled:text-success-700"
+                      >
+                        {saveStatus === "saved" || saveStatus === "duplicate" ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Bookmark className="h-4 w-4" />
+                        )}
+                        {saveStatus === "saved"
+                          ? "Saved"
+                          : saveStatus === "duplicate"
+                            ? "Already saved"
+                            : "Save prompt"}
+                      </button>
+                      <button onClick={copyOutput} aria-live="polite" className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 py-2 text-xs font-semibold text-white transition focus:outline-none focus:ring-2 focus:ring-offset-2 ${copyStatus === "copied" ? "bg-success-600 hover:bg-success-700 focus:ring-success-600" : "bg-leaf-600 hover:bg-leaf-700 focus:ring-leaf-500"}`}>
+                        {copyStatus === "copied" ? <Check className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />}
+                        {copyStatus === "copied" ? "Copied" : copyStatus === "error" ? "Copy failed" : "Copy prompt"}
+                      </button>
+                    </div>
                   </div>
                   <pre className="whitespace-pre-wrap break-words rounded-xl border border-[#D7DBF0] bg-white p-5 font-sans text-sm leading-7 text-ink/80 shadow-[0_12px_32px_rgba(49,46,129,0.08)]">{rewritten}</pre>
+                  <div className="mt-3 flex flex-col gap-1 text-xs leading-5 text-ink/50 sm:flex-row sm:items-center sm:justify-between">
+                    <p>
+                      Saved prompts stay in this browser only—no account,
+                      database, or server-side storage.
+                    </p>
+                    <p aria-live="polite">
+                      {saveStatus === "saved"
+                        ? "Saved to your local library."
+                        : saveStatus === "duplicate"
+                          ? "This prompt is already in your local library."
+                          : saveStatus === "unavailable"
+                            ? "Local saving is unavailable in this browser."
+                            : saveStatus === "error"
+                              ? "Prompt could not be saved. Check browser storage settings."
+                              : ""}
+                    </p>
+                  </div>
                 </div>
 
                 <section className="border-t border-[#D9D9F2] bg-[#F7F5FF] p-6 sm:p-8" aria-labelledby="what-changed-heading">
