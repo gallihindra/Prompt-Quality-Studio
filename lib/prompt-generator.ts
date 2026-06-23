@@ -307,10 +307,10 @@ export function normalizeLearningRequest(
   const formattedLevel = formatLearningLevel(level, language);
 
   if (language === "id") {
-    const baseRequest = `Bantu saya mempelajari ${topic} dari level ${formattedLevel}.`;
+    const baseRequest = `Bantu saya membuat rencana belajar ${topic} untuk level ${formattedLevel}.`;
     return isSimpleLearningRequest(prompt)
       ? baseRequest
-      : `${baseRequest} Pertahankan kebutuhan khusus dari permintaan awal berikut: ${prompt.trim()}`;
+      : `${baseRequest} Pertimbangkan juga kebutuhan khusus dalam permintaan awal ini: ${prompt.trim()}`;
   }
 
   const baseRequest = `Help me learn ${topic} from a ${formattedLevel} level.`;
@@ -324,20 +324,20 @@ const learningOutputInstructions = (
   language: LearningLanguage,
 ) => {
   if (language === "id") {
-    const opening =
+    const formatDescription =
       outputFormat === "checklist"
-        ? "Susun hasilnya sebagai checklist belajar yang jelas."
+        ? "checklist belajar yang jelas"
         : outputFormat === "weekly plan"
-          ? "Susun hasilnya sebagai rencana belajar mingguan."
-          : "Susun hasilnya sebagai roadmap belajar.";
+          ? "rencana belajar mingguan"
+          : "roadmap belajar";
 
-    return `${opening} Hasilnya harus mencakup:
+    return `Format jawaban (${formatDescription}):
 1. target mingguan
 2. konsep utama yang perlu dipelajari
 3. aktivitas latihan
 4. checkpoint untuk mengevaluasi progres
 5. satu proyek kecil yang aplikatif
-6. kriteria selesai`;
+6. tanda bahwa rencana belajar ini sudah selesai`;
   }
 
   const opening =
@@ -469,24 +469,29 @@ Create the requested product planning document with clear headings, priorities, 
         );
         const style = value(fields, "learningStyle");
         const outputFormat = value(fields, "outputFormat");
+        if (language === "id") {
+          const formattedLevel = formatLearningLevel(level, language);
+          const originalRequestNote = isSimpleLearningRequest(prompt)
+            ? ""
+            : ` Pertimbangkan juga kebutuhan khusus dalam permintaan awal ini: ${prompt.trim()}`;
+
+          return `Bantu saya membuat rencana belajar ${topic} selama ${timeline} untuk level ${formattedLevel}.
+
+Tujuan saya adalah ${learningGoal}. Saya bisa belajar sekitar ${weeklyTime}.${originalRequestNote}
+
+${style ? `Susun rencana belajar dengan ${learningStylePhrase(style, language)}, tetapi tetap sertakan latihan sederhana dan penerapan nyata.` : "Susun rencana belajar yang menyeimbangkan pemahaman konsep, latihan sederhana, dan penerapan nyata."}
+
+${learningOutputInstructions(outputFormat, language)}
+
+Gunakan bahasa yang mudah dipahami dan jaga beban belajarnya tetap realistis. Jangan menambahkan tujuan lanjutan yang tidak saya berikan. Pastikan progres dapat diperiksa sepanjang rencana.`;
+        }
+
         const request = normalizeLearningRequest(
           prompt,
           topic,
           level,
           language,
         );
-
-        if (language === "id") {
-          return `Bertindak sebagai coach pembelajaran yang terstruktur.
-
-${request} Tujuan belajar yang perlu dicapai: ${learningGoal}.
-
-Buat rencana belajar selama ${timeline} untuk seseorang yang dapat belajar sekitar ${weeklyTime}.${style ? ` Gunakan ${learningStylePhrase(style, language)}, tetapi tetap seimbangkan pemahaman konsep dengan latihan sederhana dan penerapan nyata.` : " Seimbangkan pemahaman konsep dengan latihan sederhana dan penerapan nyata."}
-
-${learningOutputInstructions(outputFormat, language)}
-
-Jaga beban belajar tetap realistis sesuai waktu yang tersedia. Jangan menambahkan tujuan lanjutan yang tidak saya minta. Jelaskan setiap langkah dengan bahasa yang mudah diikuti dan tunjukkan bagaimana progres dapat diperiksa sepanjang rencana.`;
-        }
 
         return `Act as a structured learning coach.
 

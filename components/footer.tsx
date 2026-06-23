@@ -5,7 +5,8 @@ export function Footer() {
     <footer className="border-t border-line bg-white">
       <div className="container-page flex flex-col gap-4 py-8 text-sm text-ink/55 sm:flex-row sm:items-center sm:justify-between">
         <p>Prompt Quality Studio — a rule-based prompt design toolkit.</p>
-        <div className="flex gap-5">
+        <div className="flex flex-wrap gap-x-5 gap-y-2">
+          <Link href="/case-study" className="hover:text-ink">Case Study</Link>
           <Link href="/examples" className="hover:text-ink">Examples</Link>
           <Link href="/methodology" className="hover:text-ink">Methodology</Link>
         </div>

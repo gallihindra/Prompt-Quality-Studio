@@ -119,7 +119,9 @@ describe("Learning Plan prompt generation", () => {
         "beginner",
         "id",
       ),
-    ).toBe("Bantu saya mempelajari machine learning dari level pemula.");
+    ).toBe(
+      "Bantu saya membuat rencana belajar machine learning untuk level pemula.",
+    );
   });
 
   it("formats bare weekly time values naturally", () => {
@@ -141,13 +143,20 @@ describe("Learning Plan prompt generation", () => {
     );
 
     expect(output).toContain(
-      "Bantu saya mempelajari machine learning dari level pemula.",
+      "Bantu saya membuat rencana belajar machine learning selama 4 minggu untuk level pemula.",
     );
-    expect(output).toContain("selama 4 minggu");
-    expect(output).toContain("sekitar 5 jam per minggu");
-    expect(output).toContain("Gunakan pendekatan theory-first");
+    expect(output).toContain("Saya bisa belajar sekitar 5 jam per minggu");
+    expect(output).toContain(
+      "Susun rencana belajar dengan pendekatan theory-first",
+    );
+    expect(output).toContain("Format jawaban");
+    expect(output).toContain("Gunakan bahasa yang mudah dipahami");
     expect(output).toContain("1. target mingguan");
-    expect(output).toContain("6. kriteria selesai");
+    expect(output).toContain(
+      "6. tanda bahwa rencana belajar ini sudah selesai",
+    );
+    expect(output).not.toContain("Bertindak sebagai");
+    expect(output).not.toContain("keluaran");
     expect(output).not.toContain("LEARNING REQUEST");
     expect(output).not.toContain("Weekly time: 5");
     expect(output).not.toContain("ajari aku machine learning");
@@ -178,7 +187,9 @@ describe("Learning Plan prompt generation", () => {
       learningFields,
     );
 
-    expect(output).toContain("Bantu saya mempelajari machine learning");
+    expect(output).toContain(
+      "Bantu saya membuat rencana belajar machine learning",
+    );
     expect(output).not.toContain("Help me learn");
   });
 });

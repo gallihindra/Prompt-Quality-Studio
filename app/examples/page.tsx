@@ -49,7 +49,7 @@ const examples = [
       "Milestones and completion criteria",
     ],
     after:
-      "Bertindak sebagai coach pembelajaran yang terstruktur. Bantu saya mempelajari machine learning dari level pemula agar memahami cara kerjanya dalam praktik. Buat roadmap belajar 4 minggu untuk sekitar 5 jam per minggu dengan pendekatan theory-first, latihan sederhana, dan satu proyek kecil. Sertakan target mingguan, konsep utama, aktivitas latihan, checkpoint progres, dan kriteria selesai.",
+      "Bantu saya membuat rencana belajar machine learning selama 4 minggu untuk pemula. Tujuan saya adalah memahami cara kerja AI dan bagaimana machine learning digunakan secara nyata. Saya bisa belajar sekitar 5 jam per minggu. Susun rencana belajar dengan pendekatan theory-first, tetapi tetap sertakan latihan sederhana, checkpoint progres, dan satu proyek kecil yang aplikatif.",
     improvements: [
       "Added level, goal, and schedule",
       "Defined the learning approach",
