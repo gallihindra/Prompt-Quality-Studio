@@ -103,7 +103,7 @@ export function StudioTool() {
         {["1  Score", "2  Diagnose", "3  Clarify", "4  Rewrite"].map((step, index) => {
           const active = index === 0 || hasRun;
           return (
-            <div key={step} className={`whitespace-pre rounded-full px-4 py-2 text-xs font-semibold ${active ? "bg-leaf-100 text-leaf-700" : "bg-white text-ink/35"}`}>
+            <div key={step} className={`whitespace-pre rounded-full border px-4 py-2 text-xs font-semibold ${active ? "border-leaf-100 bg-leaf-100 text-leaf-700" : "border-line bg-white/70 text-ink/35"}`}>
               {step}
             </div>
           );
@@ -150,7 +150,7 @@ export function StudioTool() {
               setRewritten("");
             }}
             placeholder="Paste or write your prompt here..."
-            className="min-h-44 w-full rounded-xl border border-line bg-[#FAFBF8] p-4 text-base leading-7 outline-none transition placeholder:text-ink/30 focus:border-leaf-500 focus:ring-2 focus:ring-leaf-100"
+            className="min-h-44 w-full rounded-xl border border-line bg-[#F9FAFD] p-4 text-base leading-7 outline-none transition placeholder:text-ink/30 focus:border-leaf-500 focus:ring-2 focus:ring-leaf-100"
           />
           <div className="mt-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
             <p className="text-xs text-ink/40">{prompt.trim().split(/\s+/).filter(Boolean).length} words · analyzed locally</p>
@@ -171,7 +171,7 @@ export function StudioTool() {
         ) : (
           <div>
             <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[220px_1fr]">
-              <div className="flex flex-col items-center justify-center rounded-xl bg-[#FAFBF8] p-6 text-center">
+              <div className="flex flex-col items-center justify-center rounded-xl border border-leaf-100 bg-leaf-50/70 p-6 text-center">
                 <ScoreRing score={analysis.score} />
                 <span className="mt-3 rounded-full bg-leaf-100 px-3 py-1 text-xs font-semibold text-leaf-700">{analysis.label}</span>
               </div>
@@ -197,13 +197,13 @@ export function StudioTool() {
               </div>
             </div>
 
-            <div className="border-t border-line bg-[#FAFBF8] p-6 sm:p-8">
+            <div className="border-t border-line bg-[#F8F9FD] p-6 sm:p-8">
               <div className="grid gap-6 lg:grid-cols-2">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-ink/40">What is working</p>
                   <div className="mt-3 space-y-2">
                     {(analysis.strengths.length ? analysis.strengths : ["A starting task is present"]).map((item) => (
-                      <p key={item} className="flex items-center gap-2 text-sm"><span className="grid h-5 w-5 place-items-center rounded-full bg-leaf-100 text-leaf-700"><Check className="h-3 w-3" /></span>{item}</p>
+                      <p key={item} className="flex items-center gap-2 text-sm"><span className="grid h-5 w-5 place-items-center rounded-full bg-success-100 text-success-700"><Check className="h-3 w-3" /></span>{item}</p>
                     ))}
                   </div>
                 </div>
@@ -211,7 +211,7 @@ export function StudioTool() {
                   <p className="text-xs font-semibold uppercase tracking-wider text-ink/40">Priority improvements</p>
                   <div className="mt-3 space-y-2">
                     {(analysis.gaps.length ? analysis.gaps : ["No major structural gaps detected."]).slice(0, 3).map((item, i) => (
-                      <p key={item} className="flex items-start gap-2 text-sm"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#F3EEE5] text-[10px] font-bold text-[#8A6527]">{i + 1}</span>{item}</p>
+                      <p key={item} className="flex items-start gap-2 text-sm"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#FFF3DF] text-[10px] font-bold text-[#98621D]">{i + 1}</span>{item}</p>
                     ))}
                   </div>
                 </div>
@@ -298,7 +298,7 @@ export function StudioTool() {
               </div>
               {careerDeliverableWarning && (
                 <p
-                  className="mt-3 rounded-lg border border-amber/40 bg-[#F8F2E8] px-3.5 py-2.5 text-xs leading-5 text-[#76551F]"
+                  className="mt-3 rounded-lg border border-amber/40 bg-[#FFF7E9] px-3.5 py-2.5 text-xs leading-5 text-[#7A551F]"
                   role="status"
                 >
                   {careerDeliverableWarning}
@@ -308,18 +308,18 @@ export function StudioTool() {
 
             {rewritten && (
               <>
-                <div className="border-t border-line bg-leaf-900 p-6 text-white sm:p-8">
+                <div className="border-t border-line bg-[#EEF1FF] p-6 sm:p-8">
                   <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div><p className="text-xs font-semibold uppercase tracking-wider text-white/50">Structured prompt</p><h2 className="mt-1 text-xl font-semibold">Ready to use</h2></div>
-                    <button onClick={copyOutput} aria-live="polite" className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold transition hover:bg-white/15 sm:w-auto">
+                    <div><p className="text-xs font-semibold uppercase tracking-wider text-leaf-700/70">Structured prompt</p><h2 className="mt-1 text-xl font-semibold text-ink">Ready to use</h2></div>
+                    <button onClick={copyOutput} aria-live="polite" className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full px-4 py-2 text-xs font-semibold text-white transition focus:outline-none focus:ring-2 focus:ring-offset-2 sm:w-auto ${copyStatus === "copied" ? "bg-success-600 hover:bg-success-700 focus:ring-success-600" : "bg-leaf-600 hover:bg-leaf-700 focus:ring-leaf-500"}`}>
                       {copyStatus === "copied" ? <Check className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />}
                       {copyStatus === "copied" ? "Copied" : copyStatus === "error" ? "Copy failed" : "Copy prompt"}
                     </button>
                   </div>
-                  <pre className="whitespace-pre-wrap break-words rounded-xl border border-white/10 bg-black/10 p-5 font-sans text-sm leading-7 text-white/85">{rewritten}</pre>
+                  <pre className="whitespace-pre-wrap break-words rounded-xl border border-[#D7DBF0] bg-white p-5 font-sans text-sm leading-7 text-ink/80 shadow-[0_12px_32px_rgba(49,46,129,0.08)]">{rewritten}</pre>
                 </div>
 
-                <section className="border-t border-line bg-white p-6 sm:p-8" aria-labelledby="what-changed-heading">
+                <section className="border-t border-[#D9D9F2] bg-[#F7F5FF] p-6 sm:p-8" aria-labelledby="what-changed-heading">
                   <div className="max-w-2xl">
                     <p className="eyebrow">Structure added</p>
                     <h2 id="what-changed-heading" className="mt-2 text-2xl font-semibold tracking-[-0.03em]">What changed</h2>
@@ -329,8 +329,8 @@ export function StudioTool() {
                   </div>
                   <div className="mt-6 grid gap-3 sm:grid-cols-2">
                     {promptChanges.map((change) => (
-                      <div key={change.title} className="flex gap-3 rounded-xl border border-line bg-[#FAFBF8] p-4">
-                        <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-leaf-100 text-leaf-700">
+                      <div key={change.title} className="flex gap-3 rounded-xl border border-[#DDDCF3] bg-white/80 p-4 shadow-[0_6px_18px_rgba(76,70,160,0.05)]">
+                        <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md bg-leaf-100 text-leaf-700">
                           <Check className="h-3.5 w-3.5" />
                         </span>
                         <div>

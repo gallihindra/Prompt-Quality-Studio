@@ -166,7 +166,7 @@ export default function CaseStudyPage() {
           </div>
           <ol className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
             {productFlow.map((step, index) => (
-              <li key={step} className="bg-[#FAFBF8] p-5">
+              <li key={step} className="bg-[#F8F9FD] p-5">
                 <span className="text-xs font-semibold text-leaf-600">
                   {String(index + 1).padStart(2, "0")}
                 </span>
@@ -216,7 +216,7 @@ export default function CaseStudyPage() {
                 key={dimension}
                 className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3.5"
               >
-                <Check className="h-4 w-4 shrink-0 text-leaf-100" />
+                <Check className="h-4 w-4 shrink-0 text-[#C7D2FE]" />
                 <span className="text-sm font-medium">{dimension}</span>
               </div>
             ))}
@@ -237,7 +237,7 @@ export default function CaseStudyPage() {
                   key={capability}
                   className="flex gap-3 text-sm leading-6 text-ink/65"
                 >
-                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-leaf-100 text-leaf-700">
+                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-success-100 text-success-700">
                     <Check className="h-3 w-3" />
                   </span>
                   {capability}
@@ -285,7 +285,7 @@ export default function CaseStudyPage() {
               {roadmap.map((item) => (
                 <span
                   key={item}
-                  className="rounded-full border border-line bg-[#FAFBF8] px-4 py-2 text-xs font-medium text-ink/65"
+                  className="rounded-full border border-line bg-[#F8F9FD] px-4 py-2 text-xs font-medium text-ink/65"
                 >
                   {item}
                 </span>

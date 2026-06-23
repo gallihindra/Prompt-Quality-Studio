@@ -112,7 +112,7 @@ export default function ExamplesPage() {
                   </ul>
                 </div>
               </div>
-              <div className="border-t border-line bg-[#F8FAF6] p-6 sm:p-8 lg:border-l lg:border-t-0">
+              <div className="border-t border-line bg-[#F5F6FD] p-6 sm:p-8 lg:border-l lg:border-t-0">
                 <p className="text-xs font-semibold uppercase tracking-wider text-leaf-600">
                   Improved prompt excerpt
                 </p>

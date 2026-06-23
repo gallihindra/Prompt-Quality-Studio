@@ -37,7 +37,7 @@ export default function Home() {
             <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-sm text-ink/55">
               {["Rule-based", "Runs in your browser", "No external AI API"].map((item) => (
                 <span key={item} className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-leaf-600" /> {item}
+                  <Check className="h-4 w-4 text-success-600" /> {item}
                 </span>
               ))}
             </div>
@@ -75,12 +75,12 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-              <div className="border-t border-line bg-[#FAFBF8] p-6">
+              <div className="border-t border-line bg-[#F8F9FD] p-6">
                 <p className="text-xs font-semibold uppercase tracking-wider text-ink/40">Primary opportunity</p>
                 <p className="mt-2 text-sm leading-6 text-ink/70">Define who the response is for, what it should include, and how the final answer should be structured.</p>
               </div>
             </div>
-            <div className="absolute -bottom-5 -left-5 hidden items-center gap-3 rounded-xl border border-line bg-white px-4 py-3 shadow-soft sm:flex">
+            <div className="absolute -bottom-5 -left-5 hidden items-center gap-3 rounded-xl border border-line bg-[#FCFCFE] px-4 py-3 shadow-soft sm:flex">
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-leaf-50 text-leaf-600"><Spark className="h-4 w-4" /></span>
               <div><p className="text-xs font-semibold">Rule-based analysis</p><p className="text-[11px] text-ink/45">Fast, private, deterministic</p></div>
             </div>
@@ -140,7 +140,7 @@ export default function Home() {
             <span className="rounded-full bg-[#F3EEE5] px-3 py-1 text-xs font-semibold text-[#8A6527]">Before · {analyzePrompt(beforePrompt).score}/100</span>
             <p className="mt-8 text-2xl leading-9 tracking-[-0.02em]">“{beforePrompt}”</p>
           </div>
-          <div className="border-t border-line bg-[#F8FAF6] p-7 sm:p-10 lg:border-l lg:border-t-0">
+          <div className="border-t border-line bg-[#F5F6FD] p-7 sm:p-10 lg:border-l lg:border-t-0">
             <span className="rounded-full bg-leaf-100 px-3 py-1 text-xs font-semibold text-leaf-700">After · {analyzePrompt(afterPrompt).score}/100</span>
             <div className="mt-8 space-y-4 text-sm leading-6">
               <p><strong>Task:</strong> Draft a launch email announcing our new team analytics dashboard.</p>

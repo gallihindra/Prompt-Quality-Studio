@@ -7,13 +7,13 @@ export function ScoreRing({ score, size = "large" }: { score: number; size?: "la
   return (
     <div className={`relative ${dimensions}`}>
       <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r={radius} fill="none" stroke="#E7EAE4" strokeWidth="6" />
+        <circle cx="50" cy="50" r={radius} fill="none" stroke="#E4E7F0" strokeWidth="6" />
         <circle
           cx="50"
           cy="50"
           r={radius}
           fill="none"
-          stroke="#557A57"
+          stroke="#6366F1"
           strokeWidth="6"
           strokeLinecap="round"
           strokeDasharray={circumference}

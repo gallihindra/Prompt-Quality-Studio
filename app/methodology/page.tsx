@@ -57,7 +57,7 @@ export default function MethodologyPage() {
             <p className="mt-4 text-base leading-7 text-ink/60">The studio looks for plain-language signals associated with each quality dimension, such as action verbs, format terms, length limits, audience roles, and contextual phrases.</p>
             <p className="mt-4 text-base leading-7 text-ink/60">No prompt is sent to an external service. The assessment runs in your browser and produces the same result for the same input.</p>
           </div>
-          <div className="rounded-2xl border border-line bg-[#FAFBF8] p-7">
+          <div className="rounded-2xl border border-line bg-[#F7F8FC] p-7">
             <p className="text-xs font-semibold uppercase tracking-wider text-ink/40">Score bands</p>
             <div className="mt-6 space-y-5">
               {[

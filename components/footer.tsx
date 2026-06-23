@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="border-t border-line bg-white">
+    <footer className="border-t border-line bg-[#FCFCFE]">
       <div className="container-page flex flex-col gap-4 py-8 text-sm text-ink/55 sm:flex-row sm:items-center sm:justify-between">
         <p>Prompt Quality Studio — a rule-based prompt design toolkit.</p>
         <div className="flex flex-wrap gap-x-5 gap-y-2">
