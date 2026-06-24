@@ -1,7 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createCanonicalPrompt } from "@/lib/canonical-prompt";
+import {
+  applyPrefillToUntouchedFields,
+  deriveClarificationPrefillValues,
+} from "@/lib/clarification-prefill";
 import { analyzePrompt } from "@/lib/prompt-analysis";
 import {
   createEmptyFieldValues,
@@ -31,10 +35,17 @@ export function StudioTool() {
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saved" | "duplicate" | "unavailable" | "error"
   >("idle");
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   const analysis = useMemo(() => analyzePrompt(prompt), [prompt]);
   const canonicalPrompt = useMemo(
     () => createCanonicalPrompt(prompt, promptType),
+    [prompt, promptType],
+  );
+  const prefill = useMemo(
+    () => deriveClarificationPrefillValues(prompt, promptType),
     [prompt, promptType],
   );
   const promptConfig = PROMPT_TYPE_CONFIGS[promptType];
@@ -55,9 +66,24 @@ export function StudioTool() {
     [analysis, fields, promptType, rewritten],
   );
 
+  useEffect(() => {
+    setFields((currentFields) => {
+      const nextFields = applyPrefillToUntouchedFields({
+        currentValues: currentFields,
+        prefillValues: prefill.values,
+        touchedFields,
+      });
+      const changed = Object.keys(nextFields).some(
+        (key) => nextFields[key] !== currentFields[key],
+      );
+      return changed ? nextFields : currentFields;
+    });
+  }, [prefill.values, touchedFields]);
+
   function changePromptType(type: PromptType) {
     setPromptType(type);
     setFields(createEmptyFieldValues(type));
+    setTouchedFields(new Set());
     setRewritten("");
     setCopyStatus("idle");
     setSaveStatus("idle");
@@ -77,6 +103,7 @@ export function StudioTool() {
   }
 
   function updateField(key: string, value: string) {
+    setTouchedFields((current) => new Set(current).add(key));
     setFields((currentFields) => ({ ...currentFields, [key]: value }));
     setRewritten("");
     setCopyStatus("idle");
@@ -162,6 +189,7 @@ export function StudioTool() {
             <button
               onClick={() => {
                 setPrompt(promptConfig.samplePrompt);
+                setTouchedFields(new Set());
                 setHasRun(false);
                 setRewritten("");
                 setSaveStatus("idle");
@@ -379,6 +407,9 @@ export function StudioTool() {
                   const helperId = `${fieldId}-helper`;
                   const sharedClasses = "w-full rounded-xl border border-line bg-white px-3.5 text-sm outline-none transition placeholder:text-ink/28 focus:border-leaf-500 focus:ring-2 focus:ring-leaf-100";
                   const hasSuggestions = Boolean(field.suggestions?.length);
+                  const prefilledFromPrompt =
+                    prefill.sources[field.key] === "explicit" &&
+                    fields[field.key] === prefill.values[field.key];
 
                   return (
                     <label key={field.key} htmlFor={fieldId} className="block">
@@ -388,7 +419,14 @@ export function StudioTool() {
                           {field.required ? "*" : "(Optional)"}
                         </span>
                       </span>
-                      <span id={helperId} className="mb-2 block text-xs leading-5 text-ink/45">{field.helper}</span>
+                      <span id={helperId} className="mb-2 block text-xs leading-5 text-ink/45">
+                        {field.helper}
+                        {prefilledFromPrompt && (
+                          <span className="mt-1 block font-semibold text-leaf-700">
+                            Extracted from your prompt. You can edit it.
+                          </span>
+                        )}
+                      </span>
                       {hasSuggestions && (
                         <SuggestionChips
                           label="Suggested options"
