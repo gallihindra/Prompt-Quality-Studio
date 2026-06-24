@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   FOLLOW_UP_ISSUES,
   buildFollowUpPrompt,
@@ -9,6 +9,7 @@ import {
   type FollowUpIssue,
 } from "@/lib/follow-up-prompt";
 import { savePrompt } from "@/lib/prompt-library";
+import { applySuggestionValue, SuggestionChips } from "./suggestion-chips";
 import { Bookmark, Check, CopyIcon, Spark } from "./icons";
 
 const emptyForm: FollowUpInput = {
@@ -46,6 +47,72 @@ const examples = [
 const fieldClass =
   "w-full rounded-xl border border-line bg-white px-3.5 text-sm outline-none transition placeholder:text-ink/28 focus:border-leaf-500 focus:ring-2 focus:ring-leaf-100";
 
+const suggestionGroups = {
+  desiredImprovement: [
+    "Make it more practical",
+    "Add structure",
+    "Add examples",
+    "Make it shorter",
+    "Make it more detailed",
+    "Turn it into an action plan",
+    "Make it easier to understand",
+    "Make it more specific",
+    "Adapt it to my context",
+    "Custom",
+  ],
+  desiredFormat: [
+    "Step-by-step guide",
+    "Checklist",
+    "Table",
+    "Weekly plan",
+    "Short summary",
+    "Comparison",
+    "Action plan",
+    "Email/message draft",
+    "Resume bullets",
+    "Custom",
+  ],
+  desiredTone: [
+    "Clear and direct",
+    "Friendly",
+    "Professional",
+    "Beginner-friendly",
+    "Concise",
+    "Persuasive",
+    "Warm",
+    "Neutral",
+    "Custom",
+  ],
+  desiredDepth: [
+    "Short overview",
+    "Practical guide",
+    "Detailed explanation",
+    "Beginner-friendly",
+    "Advanced",
+    "Executive summary",
+    "Step-by-step",
+    "Custom",
+  ],
+  constraints: [
+    "Keep original goal",
+    "Do not invent facts",
+    "Use only provided information",
+    "Preserve my tone",
+    "Keep it beginner-friendly",
+    "Add local context",
+    "Avoid advanced assumptions",
+    "Keep it concise",
+    "Custom",
+  ],
+} as const;
+
+type SuggestionField =
+  | "desiredImprovement"
+  | "desiredFormat"
+  | "desiredTone"
+  | "desiredDepth"
+  | "constraints";
+
 export function FollowUpBuilder() {
   const [form, setForm] = useState<FollowUpInput>(emptyForm);
   const [generated, setGenerated] = useState("");
@@ -53,6 +120,13 @@ export function FollowUpBuilder() {
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saved" | "duplicate" | "unavailable" | "error"
   >("idle");
+  const inputRefs = {
+    desiredImprovement: useRef<HTMLTextAreaElement>(null),
+    desiredFormat: useRef<HTMLInputElement>(null),
+    desiredTone: useRef<HTMLInputElement>(null),
+    desiredDepth: useRef<HTMLInputElement>(null),
+    constraints: useRef<HTMLInputElement>(null),
+  };
 
   const canGenerate =
     form.originalPrompt.trim() &&
@@ -72,6 +146,26 @@ export function FollowUpBuilder() {
     setGenerated("");
     setCopyStatus("idle");
     setSaveStatus("idle");
+  }
+
+  function applySuggestion(field: SuggestionField, option: string) {
+    if (option === "Custom") {
+      updateField(field, "");
+      window.setTimeout(() => inputRefs[field].current?.focus(), 0);
+      return;
+    }
+
+    if (field === "desiredImprovement") {
+      updateField(field, applySuggestionValue(form.desiredImprovement, option, "append"));
+      return;
+    }
+
+    if (field === "constraints") {
+      updateField(field, applySuggestionValue(form.constraints ?? "", option, "multi"));
+      return;
+    }
+
+    updateField(field, option);
   }
 
   function toggleIssue(issue: FollowUpIssue) {
@@ -210,32 +304,94 @@ export function FollowUpBuilder() {
           </div>
           <label htmlFor="desired-improvement" className="block">
             <span className="mb-2 block text-sm font-semibold">Desired improvement <span className="text-leaf-700">*</span></span>
+            <SuggestionChips
+              label="Start from a common revision goal"
+              options={suggestionGroups.desiredImprovement}
+              value={form.desiredImprovement}
+              onSelect={(option) => applySuggestion("desiredImprovement", option)}
+            />
             <textarea
               id="desired-improvement"
+              ref={inputRefs.desiredImprovement}
               value={form.desiredImprovement}
               onChange={(event) => updateField("desiredImprovement", event.target.value)}
               placeholder="For example: Turn it into a practical 4-week roadmap with milestones and exercises."
-              className={`min-h-28 p-4 leading-7 ${fieldClass}`}
+              className={`mt-3 min-h-28 p-4 leading-7 ${fieldClass}`}
             />
           </label>
           <div className="mt-5 grid gap-5 sm:grid-cols-2">
-            {[
-              ["desiredFormat", "Desired format", "For example: table, checklist, weekly plan"],
-              ["desiredTone", "Desired tone", "For example: direct, warm, professional"],
-              ["desiredDepth", "Desired depth", "For example: concise overview or detailed beginner guide"],
-              ["constraints", "Constraints or context to preserve", "Facts, limits, audience, local context, or boundaries"],
-            ].map(([key, label, placeholder]) => (
-              <label key={key} htmlFor={key} className="block">
-                <span className="mb-2 block text-sm font-semibold">{label} <span className="font-normal text-ink/40">(Optional)</span></span>
-                <input
-                  id={key}
-                  value={form[key as keyof Pick<FollowUpInput, "desiredFormat" | "desiredTone" | "desiredDepth" | "constraints">] ?? ""}
-                  onChange={(event) => updateField(key as "desiredFormat" | "desiredTone" | "desiredDepth" | "constraints", event.target.value)}
-                  placeholder={placeholder}
-                  className={`h-12 ${fieldClass}`}
-                />
-              </label>
-            ))}
+            <label htmlFor="desiredFormat" className="block">
+              <span className="mb-2 block text-sm font-semibold">Desired format <span className="font-normal text-ink/40">(Optional)</span></span>
+              <SuggestionChips
+                label="Choose a structure"
+                options={suggestionGroups.desiredFormat}
+                value={form.desiredFormat ?? ""}
+                onSelect={(option) => applySuggestion("desiredFormat", option)}
+              />
+              <input
+                id="desiredFormat"
+                ref={inputRefs.desiredFormat}
+                value={form.desiredFormat ?? ""}
+                onChange={(event) => updateField("desiredFormat", event.target.value)}
+                placeholder="For example: table, checklist, weekly plan"
+                className={`mt-3 h-12 ${fieldClass}`}
+              />
+            </label>
+
+            <label htmlFor="desiredTone" className="block">
+              <span className="mb-2 block text-sm font-semibold">Desired tone <span className="font-normal text-ink/40">(Optional)</span></span>
+              <SuggestionChips
+                label="Choose a voice"
+                options={suggestionGroups.desiredTone}
+                value={form.desiredTone ?? ""}
+                onSelect={(option) => applySuggestion("desiredTone", option)}
+              />
+              <input
+                id="desiredTone"
+                ref={inputRefs.desiredTone}
+                value={form.desiredTone ?? ""}
+                onChange={(event) => updateField("desiredTone", event.target.value)}
+                placeholder="For example: direct, warm, professional"
+                className={`mt-3 h-12 ${fieldClass}`}
+              />
+            </label>
+
+            <label htmlFor="desiredDepth" className="block">
+              <span className="mb-2 block text-sm font-semibold">Desired depth <span className="font-normal text-ink/40">(Optional)</span></span>
+              <SuggestionChips
+                label="Choose detail level"
+                options={suggestionGroups.desiredDepth}
+                value={form.desiredDepth ?? ""}
+                onSelect={(option) => applySuggestion("desiredDepth", option)}
+              />
+              <input
+                id="desiredDepth"
+                ref={inputRefs.desiredDepth}
+                value={form.desiredDepth ?? ""}
+                onChange={(event) => updateField("desiredDepth", event.target.value)}
+                placeholder="For example: concise overview or detailed beginner guide"
+                className={`mt-3 h-12 ${fieldClass}`}
+              />
+            </label>
+
+            <label htmlFor="constraints" className="block">
+              <span className="mb-2 block text-sm font-semibold">Constraints or context to preserve <span className="font-normal text-ink/40">(Optional)</span></span>
+              <SuggestionChips
+                label="Select one or more guardrails"
+                options={suggestionGroups.constraints}
+                value={form.constraints ?? ""}
+                mode="multi"
+                onSelect={(option) => applySuggestion("constraints", option)}
+              />
+              <input
+                id="constraints"
+                ref={inputRefs.constraints}
+                value={form.constraints ?? ""}
+                onChange={(event) => updateField("constraints", event.target.value)}
+                placeholder="Facts, limits, audience, local context, or boundaries"
+                className={`mt-3 h-12 ${fieldClass}`}
+              />
+            </label>
           </div>
           <div className="mt-7 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
             <button

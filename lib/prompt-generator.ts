@@ -28,7 +28,8 @@ type CareerDeliverable =
   | "resume bullet"
   | "LinkedIn summary"
   | "cover letter"
-  | "interview answer";
+  | "interview answer"
+  | "outreach message";
 
 const careerDeliverableTasks: Record<CareerDeliverable, string> = {
   "resume bullet":
@@ -39,6 +40,8 @@ const careerDeliverableTasks: Record<CareerDeliverable, string> = {
     "Draft or improve a focused cover letter for the selected target role.",
   "interview answer":
     "Develop a clear, credible interview answer for the selected target role.",
+  "outreach message":
+    "Draft a concise outreach message that introduces the candidate and supports the selected target role.",
 };
 
 const careerDeliverableGuidance: Record<CareerDeliverable, string> = {
@@ -50,6 +53,18 @@ const careerDeliverableGuidance: Record<CareerDeliverable, string> = {
     "Connect the candidate's relevant experience to the role, avoid repeating the resume line by line, and keep the letter focused and credible.",
   "interview answer":
     "Structure the answer for spoken delivery. Use a clear situation, action, and outcome sequence when the source material supports it, and keep the language natural rather than scripted.",
+  "outreach message":
+    "Keep the message brief, specific, and easy to respond to. Make the candidate's fit clear without overstating experience.",
+};
+
+const normalizeCareerDeliverable = (deliverable: string): CareerDeliverable => {
+  const normalized = deliverable.trim().toLowerCase();
+  if (/resume|bullet/.test(normalized)) return "resume bullet";
+  if (/linkedin|about/.test(normalized)) return "LinkedIn summary";
+  if (/cover/.test(normalized)) return "cover letter";
+  if (/interview/.test(normalized)) return "interview answer";
+  if (/outreach|message/.test(normalized)) return "outreach message";
+  return "resume bullet";
 };
 
 const careerIntentPatterns: Array<{
@@ -94,10 +109,7 @@ export function normalizeCareerTask(
   prompt: string,
   deliverable: string,
 ): string {
-  const selectedDeliverable =
-    deliverable in careerDeliverableTasks
-      ? (deliverable as CareerDeliverable)
-      : "resume bullet";
+  const selectedDeliverable = normalizeCareerDeliverable(deliverable);
   const baseTask = careerDeliverableTasks[selectedDeliverable];
   const cleanedRequest = cleanCareerRequest(prompt);
   const hasDeliverableMismatch = Boolean(
@@ -130,7 +142,7 @@ export function getCareerDeliverableWarning(
 
   const hasMatchingIntent = careerIntentPatterns.some(
     ({ deliverables, pattern }) =>
-      deliverables.includes(deliverable as CareerDeliverable) &&
+      deliverables.includes(normalizeCareerDeliverable(deliverable)) &&
       pattern.test(prompt),
   );
   if (hasMatchingIntent) return null;
@@ -140,7 +152,7 @@ export function getCareerDeliverableWarning(
   );
   if (
     !detectedIntent ||
-    detectedIntent.deliverables.includes(deliverable as CareerDeliverable)
+    detectedIntent.deliverables.includes(normalizeCareerDeliverable(deliverable))
   ) {
     return null;
   }
@@ -208,14 +220,17 @@ const formatLearningLevel = (
   level: string,
   language: LearningLanguage,
 ) => {
-  if (language === "en") return level;
+  const normalizedLevel = level.toLowerCase();
+  if (language === "en") return normalizedLevel;
 
   return (
     {
       beginner: "pemula",
+      "complete beginner": "pemula total",
       intermediate: "menengah",
       advanced: "lanjutan",
-    }[level] ?? level
+      "rusty / need refresher": "pernah belajar sedikit dan perlu penyegaran",
+    }[normalizedLevel] ?? level
   );
 };
 
@@ -265,24 +280,31 @@ const learningStylePhrase = (
   style: string,
   language: LearningLanguage,
 ) => {
+  const normalizedStyle = style.toLowerCase();
   if (language === "en") {
     return (
       {
         practical: "a practical approach",
+        "practice-first": "a practice-first approach",
         "theory-first": "a theory-first approach",
         "project-based": "a project-based approach",
+        "balanced theory and practice": "a balanced theory-and-practice approach",
+        "visual examples": "an approach with visual examples",
         "structured course": "a structured-course approach",
-      }[style] ?? style
+      }[normalizedStyle] ?? style
     );
   }
 
   return (
     {
       practical: "pendekatan praktis",
+      "practice-first": "pendekatan praktik terlebih dahulu",
       "theory-first": "pendekatan theory-first",
       "project-based": "pendekatan berbasis proyek",
+      "balanced theory and practice": "pendekatan yang menyeimbangkan teori dan praktik",
+      "visual examples": "pendekatan dengan contoh visual",
       "structured course": "pendekatan kursus yang terstruktur",
-    }[style] ?? style
+    }[normalizedStyle] ?? style
   );
 };
 
@@ -323,13 +345,18 @@ const learningOutputInstructions = (
   outputFormat: string,
   language: LearningLanguage,
 ) => {
+  const normalizedFormat = outputFormat.toLowerCase();
   if (language === "id") {
     const formatDescription =
-      outputFormat === "checklist"
+      normalizedFormat.includes("checklist")
         ? "checklist belajar yang jelas"
-        : outputFormat === "weekly plan"
+        : normalizedFormat.includes("weekly")
           ? "rencana belajar mingguan"
-          : "roadmap belajar";
+          : normalizedFormat.includes("table")
+            ? "tabel rencana belajar"
+            : normalizedFormat.includes("milestone")
+              ? "rencana belajar berbasis milestone"
+              : "roadmap belajar";
 
     return `Format jawaban (${formatDescription}):
 1. target mingguan
@@ -341,11 +368,15 @@ const learningOutputInstructions = (
   }
 
   const opening =
-    outputFormat === "checklist"
+    normalizedFormat.includes("checklist")
       ? "Structure the result as a clear learning checklist."
-      : outputFormat === "weekly plan"
+      : normalizedFormat.includes("weekly")
         ? "Structure the result as a week-by-week learning plan."
-        : "Structure the result as a learning roadmap.";
+        : normalizedFormat.includes("table")
+          ? "Structure the result as a learning-plan table."
+          : normalizedFormat.includes("milestone")
+            ? "Structure the result as a milestone-based learning plan."
+            : "Structure the result as a learning roadmap.";
 
   return `${opening} It should include:
 1. weekly targets
@@ -405,14 +436,14 @@ Provide publication-ready copy only, followed by two alternative opening lines.`
 
     case "career_resume":
       {
-        const deliverable = value(fields, "goal") as CareerDeliverable;
+        const deliverable = normalizeCareerDeliverable(value(fields, "goal"));
         const targetRole = value(fields, "targetRole");
         const seniority = value(fields, "seniority");
         const tone = value(fields, "tone");
         const industry = value(fields, "industry");
         const positionedRole = formatCareerRole(seniority, targetRole);
         const atsGuidance =
-          value(fields, "atsFocus") === "yes"
+          /^(yes|include|balanced)/i.test(value(fields, "atsFocus"))
             ? " Where relevant, incorporate role-specific ATS keywords naturally without keyword stuffing."
             : "";
 

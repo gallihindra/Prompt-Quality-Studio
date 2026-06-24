@@ -58,6 +58,55 @@ describe("Follow-up prompt builder", () => {
     expect(prompt).toContain("Keep the plan under five hours per week");
   });
 
+  it("includes suggestion-style format selections in the generated prompt", () => {
+    const prompt = buildFollowUpPrompt({
+      ...base,
+      desiredFormat: "Step-by-step guide",
+    });
+
+    expect(prompt).toContain("Format: Step-by-step guide");
+  });
+
+  it("includes suggestion-style tone and depth selections in the generated prompt", () => {
+    const prompt = buildFollowUpPrompt({
+      ...base,
+      desiredTone: "Clear and direct",
+      desiredDepth: "Practical guide",
+    });
+
+    expect(prompt).toContain("Tone: Clear and direct");
+    expect(prompt).toContain("Depth: Practical guide");
+  });
+
+  it("preserves multiple selected constraint suggestions", () => {
+    const prompt = buildFollowUpPrompt({
+      ...base,
+      constraints:
+        "Keep original goal, Do not invent facts, Use only provided information",
+    });
+
+    expect(prompt).toContain(
+      "Context or constraints to preserve: Keep original goal, Do not invent facts, Use only provided information",
+    );
+  });
+
+  it("preserves manual custom values", () => {
+    const prompt = buildFollowUpPrompt({
+      ...base,
+      desiredFormat: "Two sections: quick diagnosis and revised answer",
+      desiredTone: "Calm but firm",
+      desiredDepth: "Enough detail for a first-time manager",
+      constraints: "Keep the example tied to remote onboarding",
+    });
+
+    expect(prompt).toContain(
+      "Format: Two sections: quick diagnosis and revised answer",
+    );
+    expect(prompt).toContain("Tone: Calm but firm");
+    expect(prompt).toContain("Depth: Enough detail for a first-time manager");
+    expect(prompt).toContain("Keep the example tied to remote onboarding");
+  });
+
   it("omits empty optional fields", () => {
     const prompt = buildFollowUpPrompt(base);
     expect(prompt).not.toContain("Format:");

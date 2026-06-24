@@ -19,6 +19,7 @@ import {
 import { savePrompt } from "@/lib/prompt-library";
 import { ArrowRight, Bookmark, Check, CopyIcon, Spark } from "./icons";
 import { ScoreRing } from "./score-ring";
+import { applySuggestionValue, SuggestionChips } from "./suggestion-chips";
 
 export function StudioTool() {
   const [promptType, setPromptType] = useState<PromptType>("general");
@@ -80,6 +81,10 @@ export function StudioTool() {
     setRewritten("");
     setCopyStatus("idle");
     setSaveStatus("idle");
+  }
+
+  function applyFieldSuggestion(key: string, option: string, mode: "single" | "append" | "multi" = "single") {
+    updateField(key, applySuggestionValue(fields[key] ?? "", option, mode));
   }
 
   async function copyOutput() {
@@ -373,6 +378,7 @@ export function StudioTool() {
                   const fieldId = `${promptType}-${field.key}`;
                   const helperId = `${fieldId}-helper`;
                   const sharedClasses = "w-full rounded-xl border border-line bg-white px-3.5 text-sm outline-none transition placeholder:text-ink/28 focus:border-leaf-500 focus:ring-2 focus:ring-leaf-100";
+                  const hasSuggestions = Boolean(field.suggestions?.length);
 
                   return (
                     <label key={field.key} htmlFor={fieldId} className="block">
@@ -383,7 +389,22 @@ export function StudioTool() {
                         </span>
                       </span>
                       <span id={helperId} className="mb-2 block text-xs leading-5 text-ink/45">{field.helper}</span>
-                      {field.input === "select" ? (
+                      {hasSuggestions && (
+                        <SuggestionChips
+                          label="Suggested options"
+                          options={field.suggestions ?? []}
+                          value={fields[field.key] ?? ""}
+                          mode={field.suggestionMode ?? "single"}
+                          onSelect={(option) =>
+                            applyFieldSuggestion(
+                              field.key,
+                              option,
+                              field.suggestionMode ?? "single",
+                            )
+                          }
+                        />
+                      )}
+                      {field.input === "select" && !hasSuggestions ? (
                         <select
                           id={fieldId}
                           aria-describedby={helperId}
@@ -407,7 +428,7 @@ export function StudioTool() {
                           value={fields[field.key] ?? ""}
                           onChange={(event) => updateField(field.key, event.target.value)}
                           placeholder={field.placeholder}
-                          className={`min-h-28 py-3.5 leading-6 ${sharedClasses}`}
+                          className={`min-h-28 py-3.5 leading-6 ${hasSuggestions ? "mt-3" : ""} ${sharedClasses}`}
                         />
                       ) : (
                         <input
@@ -418,8 +439,8 @@ export function StudioTool() {
                           required={field.required}
                           value={fields[field.key] ?? ""}
                           onChange={(event) => updateField(field.key, event.target.value)}
-                          placeholder={field.placeholder}
-                          className={`h-12 ${sharedClasses}`}
+                          placeholder={field.placeholder ?? "Choose a suggestion or type your own"}
+                          className={`h-12 ${hasSuggestions ? "mt-3" : ""} ${sharedClasses}`}
                         />
                       )}
                     </label>

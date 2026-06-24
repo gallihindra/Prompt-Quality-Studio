@@ -65,6 +65,39 @@ describe("Career/Resume prompt generation", () => {
     );
   });
 
+  it("accepts guided career deliverable and ATS suggestion labels", () => {
+    const output = generatePrompt(
+      "career_resume",
+      "please improve my resume",
+      {
+        ...careerFields,
+        goal: "Resume bullets",
+        tone: "Senior but not exaggerated",
+        atsFocus: "Balanced ATS and readability",
+      },
+    );
+
+    expect(output).toContain("resume bullet");
+    expect(output).toContain("Senior but not exaggerated voice");
+    expect(output).toContain(
+      "incorporate role-specific ATS keywords naturally",
+    );
+    expect(output).not.toContain("undefined");
+  });
+
+  it("omits ATS guidance for human-readable ATS suggestions", () => {
+    const output = generatePrompt(
+      "career_resume",
+      "please improve my resume",
+      {
+        ...careerFields,
+        atsFocus: "No ATS focus",
+      },
+    );
+
+    expect(output).not.toContain("ATS keywords");
+  });
+
   it("warns when the raw prompt and selected deliverable conflict", () => {
     expect(
       getCareerDeliverableWarning(
@@ -178,6 +211,48 @@ describe("Learning Plan prompt generation", () => {
     expect(output).toContain("Create a learning plan covering 4 weeks");
     expect(output).toContain("around 5 hours per week");
     expect(output).not.toContain("Bantu saya");
+  });
+
+  it("uses guided learning suggestion values in the generated prompt", () => {
+    const output = generatePrompt(
+      "learning_plan",
+      "help me learn machine learning",
+      {
+        ...learningFields,
+        currentLevel: "Complete beginner",
+        timeline: "4 weeks",
+        timePerWeek: "5 hours/week",
+        learningStyle: "Balanced theory and practice",
+        outputFormat: "Weekly roadmap",
+        goal: "understand how machine learning is used in practice",
+      },
+    );
+
+    expect(output).toContain("complete beginner level");
+    expect(output).toContain("4 weeks");
+    expect(output).toContain("5 hours per week");
+    expect(output).toContain("balanced theory-and-practice approach");
+    expect(output).toContain("week-by-week learning plan");
+  });
+
+  it("preserves manual custom Studio values", () => {
+    const output = generatePrompt(
+      "content_writing",
+      "Write about AI adoption",
+      {
+        platform: "Founder community forum",
+        topic: "AI adoption habits for small teams",
+        audience: "Non-technical founders",
+        tone: "Calm and pragmatic",
+        language: "English",
+        callToAction: "Ask readers to share one workflow they automated",
+        length: "About 650 words",
+      },
+    );
+
+    expect(output).toContain("Platform: Founder community forum");
+    expect(output).toContain("Tone: Calm and pragmatic");
+    expect(output).toContain("Length: About 650 words");
   });
 
   it("recognizes a direct Indonesian teaching request without a pronoun", () => {
