@@ -7,6 +7,7 @@ import {
   deriveClarificationPrefillValues,
 } from "@/lib/clarification-prefill";
 import { analyzePrompt } from "@/lib/prompt-analysis";
+import { getPromptHealth } from "@/lib/prompt-health";
 import {
   createEmptyFieldValues,
   getMissingRequiredFields,
@@ -24,6 +25,19 @@ import { savePrompt } from "@/lib/prompt-library";
 import { ArrowRight, Bookmark, Check, CopyIcon, Spark } from "./icons";
 import { ScoreRing } from "./score-ring";
 import { applySuggestionValue, SuggestionChips } from "./suggestion-chips";
+
+const badgeClasses = {
+  good: "border-success-100 bg-success-50 text-success-700",
+  info: "border-[#D7DBF0] bg-[#EEF1FF] text-leaf-700",
+  missing: "border-[#F0D8AC] bg-[#FFF8EB] text-[#7A551F]",
+  risk: "border-[#F0C9A7] bg-[#FFF3E8] text-[#8A4D1F]",
+} as const;
+
+const severityClasses = {
+  low: "bg-[#EEF1FF] text-leaf-700",
+  medium: "bg-[#FFF8EB] text-[#7A551F]",
+  high: "bg-[#FFF1ED] text-[#9A3412]",
+} as const;
 
 export function StudioTool() {
   const [promptType, setPromptType] = useState<PromptType>("general");
@@ -47,6 +61,17 @@ export function StudioTool() {
   const prefill = useMemo(
     () => deriveClarificationPrefillValues(prompt, promptType),
     [prompt, promptType],
+  );
+  const promptHealth = useMemo(
+    () =>
+      getPromptHealth({
+        rawPrompt: prompt,
+        promptType,
+        analysis,
+        canonicalPrompt,
+        fields,
+      }),
+    [analysis, canonicalPrompt, fields, prompt, promptType],
   );
   const promptConfig = PROMPT_TYPE_CONFIGS[promptType];
   const missingRequiredFields = useMemo(
@@ -393,6 +418,97 @@ export function StudioTool() {
                   </div>
                 </div>
               </details>
+            </section>
+
+            <section className="border-t border-line bg-[#F8F9FD] p-6 sm:p-8" aria-labelledby="prompt-health-heading">
+              <div className="rounded-2xl border border-[#DADDF0] bg-white p-5 shadow-[0_12px_30px_rgba(49,46,129,0.05)]">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <p className="eyebrow">Prompt Health</p>
+                    <h2 id="prompt-health-heading" className="mt-2 text-xl font-semibold tracking-[-0.025em]">
+                      What to improve next
+                    </h2>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-ink/50">
+                      A rule-based coach that updates as you fill the clarification fields.
+                    </p>
+                  </div>
+                  <span className="w-fit rounded-full border border-[#D7DBF0] bg-[#EEF1FF] px-3 py-1.5 text-xs font-semibold capitalize text-leaf-700">
+                    {promptHealth.status}
+                  </span>
+                </div>
+
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {promptHealth.badges.slice(0, 8).map((badge) => (
+                    <span
+                      key={badge.label}
+                      title={badge.description}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${badgeClasses[badge.tone]}`}
+                    >
+                      {badge.label}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="mt-5 grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
+                  <div className="rounded-xl border border-[#D7DBF0] bg-[#F7F8FC] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-ink/40">Best next step</p>
+                    {promptHealth.nextBestField ? (
+                      <div className="mt-3">
+                        <p className="text-sm font-semibold">{promptHealth.nextBestField.label}</p>
+                        <p className="mt-1 text-sm leading-6 text-ink/55">{promptHealth.nextBestField.reason}</p>
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm leading-6 text-ink/55">
+                        The required structure is filled. Review optional details before generating.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-xl border border-[#F0D8AC] bg-[#FFF8EB] p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[#8A6128]">Risks and ambiguity</p>
+                      <div className="mt-3 space-y-3">
+                        {promptHealth.risks.length > 0 ? (
+                          promptHealth.risks.slice(0, 3).map((risk) => (
+                            <div key={risk.title}>
+                              <div className="flex items-center gap-2">
+                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${severityClasses[risk.severity]}`}>
+                                  {risk.severity}
+                                </span>
+                                <p className="text-sm font-semibold">{risk.title}</p>
+                              </div>
+                              <p className="mt-1 text-xs leading-5 text-ink/55">{risk.description}</p>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm leading-6 text-ink/55">No major risk flags from the current form state.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-success-100 bg-success-50/60 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-success-700/75">Already strong</p>
+                      <div className="mt-3 space-y-3">
+                        {promptHealth.strengths.length > 0 ? (
+                          promptHealth.strengths.slice(0, 3).map((strength) => (
+                            <div key={strength.title} className="flex gap-2">
+                              <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-success-100 text-success-700">
+                                <Check className="h-3 w-3" />
+                              </span>
+                              <div>
+                                <p className="text-sm font-semibold">{strength.title}</p>
+                                <p className="mt-1 text-xs leading-5 text-ink/55">{strength.description}</p>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm leading-6 text-ink/55">Fill one or two key fields to surface strengths here.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </section>
 
             <div className="border-t border-line p-6 sm:p-8">

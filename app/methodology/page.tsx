@@ -56,6 +56,7 @@ export default function MethodologyPage() {
             <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em]">Rule-based by design.</h2>
             <p className="mt-4 text-base leading-7 text-ink/60">The studio looks for plain-language signals associated with each quality dimension, such as action verbs, format terms, length limits, audience roles, and contextual phrases.</p>
             <p className="mt-4 text-base leading-7 text-ink/60">Before rebuilding a prompt, the Studio also shows a structured interpretation layer. It separates what was found in the original prompt, what was inferred from wording, and what is still missing so users can confirm the intent before generating.</p>
+            <p className="mt-4 text-base leading-7 text-ink/60">The Prompt Health layer adds guidance on top of that structure. It explains risks, highlights strengths, and recommends the next field to fill based on the current prompt type and clarification state.</p>
             <p className="mt-4 text-base leading-7 text-ink/60">No prompt is sent to an external service. The assessment runs in your browser and produces the same result for the same input.</p>
           </div>
           <div className="rounded-2xl border border-line bg-[#F7F8FC] p-7">
