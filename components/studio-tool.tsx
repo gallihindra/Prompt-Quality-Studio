@@ -8,6 +8,7 @@ import {
 } from "@/lib/clarification-prefill";
 import { analyzePrompt } from "@/lib/prompt-analysis";
 import { getPromptHealth } from "@/lib/prompt-health";
+import { getPromptQualityDelta } from "@/lib/prompt-quality-delta";
 import {
   createEmptyFieldValues,
   getMissingRequiredFields,
@@ -89,6 +90,10 @@ export function StudioTool() {
   const promptChanges = useMemo(
     () => (rewritten ? getPromptChanges(promptType, analysis, fields) : []),
     [analysis, fields, promptType, rewritten],
+  );
+  const qualityDelta = useMemo(
+    () => (rewritten ? getPromptQualityDelta(prompt, rewritten) : null),
+    [prompt, rewritten],
   );
 
   useEffect(() => {
@@ -672,6 +677,73 @@ export function StudioTool() {
                     </p>
                   </div>
                 </div>
+
+                {qualityDelta && (
+                  <section className="border-t border-[#D9DFF4] bg-[#F8F9FD] p-6 sm:p-8" aria-labelledby="quality-delta-heading">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="eyebrow">
+                          {qualityDelta.delta > 0 ? "Estimated quality improvement" : "Structure comparison"}
+                        </p>
+                        <h2 id="quality-delta-heading" className="mt-2 text-2xl font-semibold tracking-[-0.03em]">
+                          Before / After Quality Delta
+                        </h2>
+                        <p className="mt-2 max-w-2xl text-sm leading-6 text-ink/50">
+                          Rule-based comparison using the same scoring logic as the original prompt assessment.
+                        </p>
+                      </div>
+                      <span className={`w-fit rounded-full px-3 py-1.5 text-xs font-semibold ${qualityDelta.delta > 0 ? "bg-success-100 text-success-700" : "bg-[#EEF1FF] text-leaf-700"}`}>
+                        {qualityDelta.delta > 0 ? `+${qualityDelta.delta}` : qualityDelta.delta} pts
+                      </span>
+                    </div>
+
+                    <div className="mt-6 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                        <div className="rounded-xl border border-line bg-white p-4">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-ink/40">Original prompt</p>
+                          <p className="mt-2 text-3xl font-semibold tracking-[-0.04em]">
+                            {qualityDelta.originalScore}
+                            <span className="text-sm font-normal text-ink/35"> / 100</span>
+                          </p>
+                          <p className="mt-1 text-xs font-semibold capitalize text-ink/50">{qualityDelta.originalStatus}</p>
+                        </div>
+                        <div className="rounded-xl border border-[#D7DBF0] bg-white p-4 shadow-[0_10px_24px_rgba(49,46,129,0.06)]">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-leaf-700/70">Improved prompt</p>
+                          <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-leaf-700">
+                            {qualityDelta.improvedScore}
+                            <span className="text-sm font-normal text-ink/35"> / 100</span>
+                          </p>
+                          <p className="mt-1 text-xs font-semibold capitalize text-ink/50">{qualityDelta.improvedStatus}</p>
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl border border-[#D7DBF0] bg-white p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-ink/40">Improved structure signals</p>
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                          {qualityDelta.improvements.length > 0 ? (
+                            qualityDelta.improvements.map((improvement) => (
+                              <div key={improvement.label} className="flex gap-2">
+                                <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-success-100 text-success-700">
+                                  <Check className="h-3 w-3" />
+                                </span>
+                                <div>
+                                  <p className="text-sm font-semibold">{improvement.label}</p>
+                                  {improvement.description && (
+                                    <p className="mt-1 text-xs leading-5 text-ink/50">{improvement.description}</p>
+                                  )}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-sm leading-6 text-ink/55">
+                              The generated prompt is available for review, but the rule-based score did not identify a clear positive delta.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                )}
 
                 <section className="border-t border-[#D9D9F2] bg-[#F7F5FF] p-6 sm:p-8" aria-labelledby="what-changed-heading">
                   <div className="max-w-2xl">

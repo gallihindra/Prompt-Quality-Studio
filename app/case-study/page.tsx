@@ -10,14 +10,17 @@ export const metadata: Metadata = {
 };
 
 const productFlow = [
-  "Paste a rough prompt",
-  "Select the task type",
-  "Receive a structure score",
-  "See missing context",
-  "Answer clarification questions",
-  "Generate an improved prompt",
-  "Review what changed",
-  "Copy it into a preferred AI tool",
+  "Raw prompt",
+  "Score / diagnosis",
+  "Structured interpretation",
+  "Prompt Health Coach",
+  "Smart prefill",
+  "Guided clarification",
+  "Improved prompt",
+  "Before / After Quality Delta",
+  "What Changed",
+  "Save to Library",
+  "Follow-up Builder",
 ];
 
 const designDecisions = [
@@ -30,24 +33,28 @@ const designDecisions = [
     text: "Business ideas, career documents, product plans, content, and learning requests need different kinds of context.",
   },
   {
-    title: "Dynamic clarification",
-    text: "Each task type asks focused questions so users add relevant information instead of completing a universal form.",
+    title: "Explicit vs inferred information",
+    text: "The Structured Interpretation layer separates what the prompt actually says from what the tool infers, so assumptions are not treated as facts.",
   },
   {
-    title: "Required fields",
-    text: "Important inputs must be completed before generation, preventing unfinished prompts with visible placeholders.",
+    title: "Guidance before generation",
+    text: "Prompt Health explains risks, strengths, and the next best field before the user generates a rewritten prompt.",
   },
   {
-    title: "Type-aware generation",
-    text: "Deterministic templates produce meaningfully different instructions for each supported workflow.",
+    title: "Smart prefill with user control",
+    text: "Only explicit information from the raw prompt can prefill fields, and users can always edit or override the result.",
+  },
+  {
+    title: "Suggestion-assisted clarification",
+    text: "Guided chips reduce blank-canvas friction while preserving manual input for custom context.",
   },
   {
     title: "Explain the transformation",
-    text: "The What Changed panel names the structure added so the user can learn from the rewrite rather than only copy it.",
+    text: "The What Changed panel names the structure added so users can learn from the rewrite rather than only copy it.",
   },
   {
-    title: "Teach through examples",
-    text: "Realistic before-and-after cases make the framework easier to understand than abstract prompt advice alone.",
+    title: "Local saving without accounts",
+    text: "The Local Prompt Library uses browser storage so users can save useful prompts without a database or login.",
   },
 ];
 
@@ -63,41 +70,54 @@ const qualityDimensions = [
 ];
 
 const capabilities = [
-  "Prompt scoring",
-  "Missing-context diagnosis",
-  "Type-aware clarification",
-  "Generated improved prompts",
-  "What Changed explanation",
+  "Prompt Scoring and Diagnosis",
+  "Prompt Type Selection",
+  "Dynamic Clarification Forms",
+  "Guided Suggestion Chips",
+  "Structured Interpretation / Canonical View",
+  "Smart Prefill from explicit prompt fields",
+  "Prompt Health Coach",
+  "Improved Prompt Generator",
+  "Before / After Quality Delta",
+  "What Changed Panel",
   "Local Prompt Library",
-  "Examples and methodology pages",
-  "Privacy-friendly local processing",
-  "Regression tests for scoring and generation logic",
+  "Follow-up Prompt Builder",
+  "Examples and Methodology Pages",
 ];
 
 const limitations = [
   "The system is deterministic and rule-based.",
   "It does not evaluate responses produced by AI models.",
   "It cannot guarantee that a rewritten prompt will produce a better output.",
-  "Only prompts explicitly saved to the Local Library persist, with no cloud sync or account-based access.",
+  "Saved prompts use browser localStorage only, with no cloud sync or account-based access.",
   "It does not have semantic model understanding.",
   "The MVP focuses on instruction structure, not full AI-output evaluation.",
 ];
 
 const roadmap = [
-  "Follow-up Prompt Builder",
-  "Prompt library organization and search",
-  "Local Memory and reusable user context",
+  "Prompt quality progress timeline",
+  "Output style presets",
+  "Local user preferences / profile",
+  "Export / import prompt library",
   "Rubric Linter / Eval Ops Mode",
-  "AI Evaluation Lab and interactive calibration practice",
+  "Optional Semantic Assist for ambiguous prompts, while keeping local rule-based mode as the default",
 ];
 
 const demonstrations = [
-  "AI quality operations thinking",
-  "Prompt evaluation and instruction design",
-  "Human-in-the-loop workflow design",
-  "Product thinking for ambiguous AI problems",
-  "Privacy-conscious, zero-cost MVP design",
-  "Testable rule-based quality logic",
+  "AI quality operations thinking applied to a practical product",
+  "Ambiguity reduction as a usable workflow",
+  "Human-in-the-loop clarification systems",
+  "Explainable AI-support tooling",
+  "Deterministic guidance before relying on LLMs",
+  "Privacy-friendly, zero-cost product architecture",
+];
+
+const promptHealthExamples = [
+  "Career / Resume: source material and target role risks",
+  "Learning Plan: missing timeline, level, or weekly study time",
+  "Business Idea: missing budget or market",
+  "Content Writing: missing audience, platform, or tone",
+  "Product Planning: missing target user, stage, or success metric",
 ];
 
 export default function CaseStudyPage() {
@@ -110,14 +130,16 @@ export default function CaseStudyPage() {
             Building Prompt Quality Studio
           </h1>
           <p className="mt-6 max-w-3xl text-xl leading-8 text-leaf-700">
-            A local-first prompt quality tool for turning vague AI requests
-            into structured instructions.
+            A local-first prompt quality workflow tool for diagnosing vague AI
+            requests and building clearer instructions through structured
+            guidance.
           </p>
           <p className="mt-7 max-w-3xl text-base leading-8 text-ink/60">
-            Many weak AI outputs begin with unclear instructions, missing
-            context, vague output expectations, or weak success criteria. This
-            project explores how AI quality and evaluation principles can help
-            users improve prompt structure before they use an AI model.
+            Many weak AI outputs start before the model responds. The request
+            may have an unclear goal, missing context, weak constraints, no
+            output format, no audience, missing source material, or unresolved
+            factuality risk. Prompt Quality Studio turns that ambiguity into an
+            explainable, human-in-the-loop workflow.
           </p>
         </div>
       </section>
@@ -136,6 +158,12 @@ export default function CaseStudyPage() {
               too much open to interpretation. Vague prompts commonly omit
               context, constraints, audience, output format, success criteria,
               or factuality guardrails.
+            </p>
+            <p>
+              The issue is not only that the prompt is short. The deeper
+              problem is that the system has to infer too much: what the user
+              wants, what source material matters, what “good” means, and what
+              assumptions are unsafe.
             </p>
             <p>
               Generic prompt generators may produce a longer rewrite without
@@ -161,11 +189,18 @@ export default function CaseStudyPage() {
             <p className="mt-5 text-base leading-7 text-ink/60">
               Prompt Quality Studio separates prompt preparation from model
               generation. It does not call an external AI API; scoring,
-              clarification, generation, and explanation all use local
-              rule-based logic.
+              interpretation, guidance, clarification, generation, saving, and
+              explanation all use local rule-based logic.
+            </p>
+            <p className="mt-4 text-base leading-7 text-ink/60">
+              The workflow diagnoses the prompt, interprets what it explicitly
+              says, separates inferred intent from facts, surfaces missing
+              fields and ambiguity risks, guides the next best clarification,
+              generates a clearer prompt, explains what changed, and supports
+              local saving plus follow-up refinement.
             </p>
           </div>
-          <ol className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+          <ol className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-5">
             {productFlow.map((step, index) => (
               <li key={step} className="bg-[#F8F9FD] p-5">
                 <span className="text-xs font-semibold text-leaf-600">
@@ -194,6 +229,62 @@ export default function CaseStudyPage() {
               </p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="border-y border-line bg-white">
+        <div className="container-page grid gap-6 py-16 sm:py-20 lg:grid-cols-3">
+          <article className="rounded-2xl border border-line bg-[#F8F9FD] p-6 sm:p-7">
+            <p className="eyebrow">Structured interpretation</p>
+            <h2 className="mt-4 text-2xl font-semibold tracking-[-0.035em]">
+              Show how the prompt is read.
+            </h2>
+            <p className="mt-4 text-sm leading-7 text-ink/60">
+              Before users fill the form, the Studio shows detected language,
+              selected or detected category, explicit fields, inferred intent,
+              missing fields, and ambiguity notes.
+            </p>
+            <p className="mt-4 text-sm font-medium leading-6 text-ink">
+              The key principle: inferred information is never presented as
+              fact.
+            </p>
+          </article>
+
+          <article className="rounded-2xl border border-line bg-[#F8F9FD] p-6 sm:p-7">
+            <p className="eyebrow">Smart prefill</p>
+            <h2 className="mt-4 text-2xl font-semibold tracking-[-0.035em]">
+              Reduce redundant typing.
+            </h2>
+            <p className="mt-4 text-sm leading-7 text-ink/60">
+              Explicit information from the original prompt can prefill
+              relevant clarification fields. For example, “Improve my
+              experience description for a customer success role” can prefill
+              the target role as Customer Success.
+            </p>
+            <p className="mt-4 text-sm font-medium leading-6 text-ink">
+              Only explicit information is prefilled. Inferred information
+              stays in the interpretation layer.
+            </p>
+          </article>
+
+          <article className="rounded-2xl border border-line bg-[#F8F9FD] p-6 sm:p-7">
+            <p className="eyebrow">Prompt Health Coach</p>
+            <h2 className="mt-4 text-2xl font-semibold tracking-[-0.035em]">
+              Guide the next best clarification.
+            </h2>
+            <p className="mt-4 text-sm leading-7 text-ink/60">
+              Prompt Health explains what is missing, what is risky or
+              ambiguous, what field to fill next, why that field matters, and
+              what is already strong.
+            </p>
+            <ul className="mt-4 space-y-2">
+              {promptHealthExamples.map((example) => (
+                <li key={example} className="text-xs leading-5 text-ink/55">
+                  • {example}
+                </li>
+              ))}
+            </ul>
+          </article>
         </div>
       </section>
 
@@ -272,6 +363,39 @@ export default function CaseStudyPage() {
       </section>
 
       <section className="border-y border-line bg-white">
+        <div className="container-page grid gap-10 py-16 sm:py-20 lg:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <p className="eyebrow">Local-first architecture</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em]">
+              Privacy-friendly by default.
+            </h2>
+            <p className="mt-5 text-sm leading-7 text-ink/60">
+              The product is designed as a zero-cost workflow prototype:
+              rule-based, deterministic, and usable without external model
+              calls or backend infrastructure.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              "Prompts are processed locally by default",
+              "No external AI API is used",
+              "No server-side prompt storage",
+              "No login required",
+              "No database or analytics",
+              "Local Library uses browser localStorage",
+            ].map((item) => (
+              <div
+                key={item}
+                className="rounded-xl border border-line bg-[#F8F9FD] p-4 text-sm font-medium leading-6"
+              >
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-line bg-white">
         <div className="container-page grid gap-12 py-16 sm:py-20 lg:grid-cols-2">
           <div>
             <p className="eyebrow">Future roadmap</p>
@@ -299,8 +423,10 @@ export default function CaseStudyPage() {
               What this project demonstrates.
             </h2>
             <p className="mt-4 text-sm leading-7 text-ink/55">
-              The project turns an ambiguous AI workflow problem into a
-              structured, testable product experience.
+              The project applies AI quality operations thinking to a practical
+              product: reducing ambiguity before generation, making guidance
+              explainable, and keeping humans in control of the final
+              instruction.
             </p>
             <div className="mt-7 grid gap-3 sm:grid-cols-2">
               {demonstrations.map((item) => (
